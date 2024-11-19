@@ -14,51 +14,38 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SignInScreen(
+fun NewPostScreen(
     modifier: Modifier = Modifier,
-    loginFunction: (String, String) -> Unit,
-    signupFunction: (String, String) -> Unit
+    postFunction: (String) -> Unit,
+    logoutFunction: () -> Unit
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var post by remember { mutableStateOf("") }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.padding(16.dp)
     ) {
         OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Username") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
+            value = post,
+            onValueChange = { post = it },
+            label = { Text("Post") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
         TextButton(
             onClick = {
-                loginFunction(username, password)
-                username = ""
-                password = ""
+                postFunction(post)
+                post = ""
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Login")
+            Text(text = "Post")
         }
         TextButton(
-            onClick = {
-                signupFunction(username, password)
-                username = ""
-                password = ""
-            },
+            onClick = logoutFunction,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Signup")
+            Text(text = "Logout")
         }
     }
 }

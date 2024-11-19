@@ -179,7 +179,7 @@ fun MainNavigation(onLaunchSignIn: () -> Unit) { // Outermost composable where p
             modifier = Modifier.fillMaxSize(),
         ) { innerPadding ->
             Box(modifier=Modifier.padding(innerPadding)) {
-                SignInScreen(onSignInRequest=onLaunchSignIn) // This might be removed later if we can just directly launch the firebase UI
+                SignInScreen(loginFunction={_,_ -> onLaunchSignIn()}, signupFunction={_,_ ->}) // This might be removed later if we can just directly launch the firebase UI
             }
         }
         return
