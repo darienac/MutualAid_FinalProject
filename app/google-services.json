@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "38412906080",
+    "project_id": "mutualaid-final-project",
+    "storage_bucket": "mutualaid-final-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:38412906080:android:be64258c00f73a93819d05",
+        "android_client_info": {
+          "package_name": "com.example.mutualaid_finalproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "38412906080-42q4itgd6he3v42mo26ttgs0vikul43p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mutualaid_finalproject",
+            "certificate_hash": "bdd195bc8f77de6a34ec5fc97b545fd0c390b32c"
+          }
+        },
+        {
+          "client_id": "38412906080-ki73o7cfjddsq7b0jkbd638dcmreqt4d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOOQtICHLMM9m9SGZx5l7ZVje6uIcuEZ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "38412906080-ki73o7cfjddsq7b0jkbd638dcmreqt4d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
