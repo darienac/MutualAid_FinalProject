@@ -1,6 +1,7 @@
 [versions]
 agp = "8.6.0"
 androidxCredentials = "<latest version>"
+converterGson = "2.9.0"
 credentials = "1.5.0-beta01"
 credentialsPlayServicesAuth = "<latest version>"
 firebaseBom = "33.6.0"
@@ -18,12 +19,14 @@ navigationCompose = "2.8.4"
 googleGmsGoogleServices = "4.4.2"
 firebaseAuth = "23.1.0"
 playServicesAuth = "21.2.0"
+retrofit = "2.9.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
 androidx-credentials-vlatestversion = { module = "androidx.credentials:credentials", version.ref = "androidxCredentials" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-ui-auth = { module = "com.firebaseui:firebase-ui-auth", version.ref = "firebaseUiAuth" }
 google-firebase-auth = { module = "com.google.firebase:firebase-auth" }
@@ -44,6 +47,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
