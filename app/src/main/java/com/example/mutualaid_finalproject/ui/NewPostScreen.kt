@@ -16,8 +16,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun NewPostScreen(
     modifier: Modifier = Modifier,
-    postFunction: (String) -> Unit,
-    logoutFunction: () -> Unit
+    postFunction: (String) -> Unit
 ) {
     var post by remember { mutableStateOf("") }
 
@@ -40,12 +39,6 @@ fun NewPostScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Post")
-        }
-        TextButton(
-            onClick = logoutFunction,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Logout")
         }
     }
 }

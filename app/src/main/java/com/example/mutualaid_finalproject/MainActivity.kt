@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -41,6 +42,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +63,7 @@ import androidx.credentials.GetPasswordOption
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.lifecycleScope
+import com.example.mutualaid_finalproject.ui.NewPostScreen
 import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
 import com.example.mutualaid_finalproject.ui.SettingsScreen
@@ -172,14 +175,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainNavigation(onLaunchSignIn: () -> Unit) { // Outermost composable where probably all/most of the UI logic can go
     var selectedItem by remember {mutableIntStateOf(0)}
-    var signedIn by remember {mutableStateOf(true)} // Temporary until this can be checked directly
+    var signedIn by rememberSaveable {mutableStateOf(false)} // Temporary until this can be checked directly
 
     if (!signedIn) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
         ) { innerPadding ->
             Box(modifier=Modifier.padding(innerPadding)) {
-                SignInScreen(loginFunction={_,_ -> onLaunchSignIn()}, signupFunction={_,_ ->}) // This might be removed later if we can just directly launch the firebase UI
+                SignInScreen(loginFunction={_,_ -> signedIn = true; onLaunchSignIn()}, signupFunction={_,_ ->}) // This might be removed later if we can just directly launch the firebase UI
             }
         }
         return
@@ -198,12 +201,18 @@ fun MainNavigation(onLaunchSignIn: () -> Unit) { // Outermost composable where p
                 NavigationBarItem(
                     selected = selectedItem == 1,
                     onClick = {selectedItem = 1},
-                    icon = {Icon(Icons.Filled.Search, "Search")},
-                    label = {Text("Search")}
+                    icon = {Icon(Icons.Outlined.AddCircle, "New Post")},
+                    label = {Text("New Post")}
                 )
                 NavigationBarItem(
                     selected = selectedItem == 2,
                     onClick = {selectedItem = 2},
+                    icon = {Icon(Icons.Filled.Search, "Search")},
+                    label = {Text("Search")}
+                )
+                NavigationBarItem(
+                    selected = selectedItem == 3,
+                    onClick = {selectedItem = 3},
                     icon = {Icon(Icons.Filled.Settings, "Settings")},
                     label = {Text("Settings")}
                 )
@@ -213,8 +222,9 @@ fun MainNavigation(onLaunchSignIn: () -> Unit) { // Outermost composable where p
         Box(modifier=Modifier.padding(innerPadding)) {
             when (selectedItem) {
                 0 -> ProfileScreen()
-                1 -> SearchScreen()
-                2 -> SettingsScreen()
+                1 -> NewPostScreen(postFunction={})
+                2 -> SearchScreen()
+                3 -> SettingsScreen()
             }
         }
     }
