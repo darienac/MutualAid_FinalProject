@@ -101,8 +101,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MutualAid_FinalProjectTheme {
-//                MainNavigation(onLaunchSignIn = {launchSignIn()})
-                DistanceCalculator("GET API KEY FROM GOOGLE DOC :3")
+                MainNavigation(onLaunchSignIn = {launchSignIn()})
+                //DistanceCalculator("GET API KEY FROM GOOGLE DOC :3")
             }
         }
     }
