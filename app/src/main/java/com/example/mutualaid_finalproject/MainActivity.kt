@@ -1,5 +1,6 @@
 package com.example.mutualaid_finalproject
 
+import android.app.Application
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
@@ -50,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -64,12 +66,18 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.GetPasswordOption
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.ui.NewPostScreen
 import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
 import com.example.mutualaid_finalproject.ui.SettingsScreen
 import com.example.mutualaid_finalproject.ui.SignInScreen
+import com.example.mutualaid_finalproject.ui.TestDatabaseScreen
 import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.AuthUI.IdpConfig
@@ -101,8 +109,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MutualAid_FinalProjectTheme {
-                MainNavigation(onLaunchSignIn = {launchSignIn()})
-//                DistanceCalculator("GET API KEY FROM GOOGLE DOC :3")
+                val owner = LocalViewModelStoreOwner.current
+
+                owner?.let {
+                    val viewModel: MainViewModel = viewModel(
+                        it,
+                        "MainViewModel",
+                        MainViewModelFactory(
+                            LocalContext.current.applicationContext as Application
+                        )
+                    )
+//                    MainNavigation(viewModel=viewModel, onLaunchSignIn = {launchSignIn()})
+//                    DistanceCalculator("GET API KEY FROM GOOGLE DOC :3")
+                    TestDatabaseScreen(viewModel=viewModel)
+                }
             }
         }
     }
@@ -182,7 +202,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainNavigation(onLaunchSignIn: () -> Unit) { // Outermost composable where probably all/most of the UI logic can go
+fun MainNavigation(viewModel: MainViewModel, onLaunchSignIn: () -> Unit) { // Outermost composable where probably all/most of the UI logic can go
     var selectedItem by remember {mutableIntStateOf(0)}
     var signedIn by rememberSaveable {mutableStateOf(false)} // Temporary until this can be checked directly
 
@@ -236,6 +256,13 @@ fun MainNavigation(onLaunchSignIn: () -> Unit) { // Outermost composable where p
                 3 -> SettingsScreen()
             }
         }
+    }
+}
+
+class MainViewModelFactory(private val application: Application) :
+    ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return MainViewModel(application) as T
     }
 }
 
