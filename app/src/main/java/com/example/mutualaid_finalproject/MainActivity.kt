@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AddCircle
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -34,6 +35,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -80,7 +82,13 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingExcept
 import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import retrofit2.http.Query
+
 
 
 class MainActivity : ComponentActivity() {
@@ -93,7 +101,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MutualAid_FinalProjectTheme {
-                MainNavigation(onLaunchSignIn = {launchSignIn()})
+//                MainNavigation(onLaunchSignIn = {launchSignIn()})
+                DistanceCalculator("GET API KEY FROM GOOGLE DOC :3")
             }
         }
     }
@@ -226,6 +235,87 @@ fun MainNavigation(onLaunchSignIn: () -> Unit) { // Outermost composable where p
                 2 -> SearchScreen()
                 3 -> SettingsScreen()
             }
+        }
+    }
+}
+
+// Define the endpoints and parameters for the Google Maps Distance Matrix API.
+interface DistanceMatrixService {
+    @GET("distancematrix/json")
+    suspend fun getDistance(
+        @Query("origins") origins: String,
+        @Query("destinations") destinations: String,
+        @Query("mode") mode: String = "driving",
+        @Query("key") apiKey: String,
+        @Query("units") units: String = "imperial"    // Units: 'imperial' for miles, 'metric' for km
+    ): DistanceMatrixResponse
+}
+
+// Define data classes to model the response from the API.
+data class DistanceMatrixResponse(
+    val rows: List<Row>
+)
+
+data class Row(
+    val elements: List<Element>
+)
+
+data class Element(
+    val distance: Distance,
+    val duration: Duration,
+    val status: String
+)
+
+data class Distance(val text: String, val value: Int)
+data class Duration(val text: String, val value: Int)
+
+@Composable
+fun DistanceCalculator(apiKey: String) {
+    var origin by remember { mutableStateOf("") }
+    var destination by remember { mutableStateOf("") }
+    var distance by remember { mutableStateOf<String?>(null) }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        OutlinedTextField(
+            value = origin,
+            onValueChange = { origin = it },
+            label = { Text("Enter Origin") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = destination,
+            onValueChange = { destination = it },
+            label = { Text("Enter Destination") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Button(
+            onClick = {
+                // Use the Retrofit interface to make API calls.
+                // Call API to calculate distance
+                CoroutineScope(Dispatchers.IO).launch {
+                    val service = Retrofit.Builder()
+                        .baseUrl("https://maps.googleapis.com/maps/api/")
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build()
+                        .create(DistanceMatrixService::class.java)
+
+                    val response = service.getDistance(
+                        origins = origin,
+                        destinations = destination,
+                        apiKey = apiKey
+                    )
+
+                    distance = response.rows.firstOrNull()
+                        ?.elements?.firstOrNull()
+                        ?.distance?.text
+                }
+            },
+            modifier = Modifier.padding(top = 16.dp)
+        ) {
+            Text("Calculate Distance")
+        }
+        distance?.let {
+            Text(text = "Distance: $it", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 16.dp))
         }
     }
 }
