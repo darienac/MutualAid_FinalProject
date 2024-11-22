@@ -76,4 +76,8 @@ dependencies {
     implementation(libs.firebase.ui.auth)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+    // Retrofit core library
+    implementation(libs.retrofit)
+    // Gson converter for JSON parsing
+    implementation(libs.converter.gson)
 }
