@@ -250,7 +250,14 @@ fun MainNavigation(viewModel: MainViewModel, onLaunchSignIn: () -> Unit) { // Ou
     ) { innerPadding ->
         Box(modifier=Modifier.padding(innerPadding)) {
             when (selectedItem) {
-                0 -> ProfileScreen()
+                0 -> ProfileScreen(
+                    modifier=Modifier.padding(innerPadding),
+                    username="username",
+                    name="name",
+                    description="I'm a cool guy!",
+                    skills=listOf("sewing", "editing"),
+                    resources=listOf("clothes", "food")
+                )
                 1 -> NewPostScreen(postFunction={})
                 2 -> SearchScreen()
                 3 -> SettingsScreen()
