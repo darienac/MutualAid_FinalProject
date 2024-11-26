@@ -131,9 +131,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin: (String, String) -> Unit, onSignup: (String, String) -> Unit) { // Outermost composable where probably all/most of the UI logic can go
     var selectedItem by remember {mutableIntStateOf(0)}
-    val currentUID by viewModel.currentUID.observeAsState()
+    val currentUser by viewModel.currentUser.observeAsState()
 
-    if (currentUID == null) {
+    if (currentUser == null) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
         ) { innerPadding ->
@@ -147,7 +147,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            Text(currentUID ?: "No User", modifier=Modifier.padding(8.dp, 16.dp))
+            Text(currentUser?.email ?: "No User", modifier=Modifier.padding(8.dp, 16.dp))
         },
         bottomBar = {
             NavigationBar() {

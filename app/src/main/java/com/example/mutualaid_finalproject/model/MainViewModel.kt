@@ -17,27 +17,32 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 
+data class UserData(
+    val uid: String = "",
+    val email: String = "",
+    val emailVerified: Boolean = false
+)
+
 class MainViewModel(application: Application) : ViewModel() {
     private val db = Firebase.firestore
     private val auth = Firebase.auth
 
-    var currentUID = MutableLiveData<String>()
+    var currentUser = MutableLiveData<UserData?>()
+    var profileRepository: ProfileRepository? = null // this is public so the UI controller can access this directly
 
-    init {}
-
-    fun createNewProfile(uid: String) {
-        val profile = hashMapOf(
-            "availability" to "",
-            "name" to "test",
-            "resources" to "textbooks",
-            "skills" to "none"
-        )
-
-        db.collection("profiles").document(uid)
-            .set(profile)
-            .addOnFailureListener {
-                Log.w("MainViewModel", "Error adding document", it)
+    private fun updateCurrentUser(user: FirebaseUser?) {
+        if (user?.uid == null) {
+            profileRepository = null
+            currentUser.value = null
+        } else {
+            profileRepository = ProfileRepository(user.uid) {
+                currentUser.value = UserData(
+                    uid=user.uid,
+                    email=user.email?:"",
+                    emailVerified=user.isEmailVerified
+                )
             }
+        }
     }
 
     fun handleSignUp(email: String, password: String, mainActivity: Activity) {
@@ -45,7 +50,7 @@ class MainViewModel(application: Application) : ViewModel() {
             .addOnCompleteListener(mainActivity) { task ->
                 if (task.isSuccessful) {
                     Log.d("FirebaseAuth", "createUserWithEmail:success")
-                    currentUID.value = auth.currentUser?.uid
+                    updateCurrentUser(auth.currentUser)
                 } else {
                     Log.w("FirebaseAuth", "createUserWithEmail:failure", task.exception)
                     Toast.makeText(
@@ -62,7 +67,7 @@ class MainViewModel(application: Application) : ViewModel() {
             .addOnCompleteListener(mainActivity) { task ->
                 if (task.isSuccessful) {
                     Log.d("FirebaseAuth", "signInWithEmail:success")
-                    currentUID.value = auth.currentUser?.uid
+                    updateCurrentUser(auth.currentUser)
                 } else {
                     Log.w("FirebaseAuth", "signInWithEmail:failure", task.exception)
                     Toast.makeText(
@@ -101,7 +106,7 @@ class MainViewModel(application: Application) : ViewModel() {
                             if (task.isSuccessful) {
                                 // Sign in success, update UI with the signed-in user's information
                                 Log.d("FirebaseAuth", "signInWithCredential:success")
-                                currentUID.value = auth.currentUser?.uid
+                                updateCurrentUser(auth.currentUser)
                             } else {
                                 // If sign in fails, display a message to the user.
                                 Log.w("FirebaseAuth", "signInWithCredential:failure", task.exception)
