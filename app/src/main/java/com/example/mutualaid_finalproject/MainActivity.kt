@@ -49,6 +49,7 @@ import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
 import com.example.mutualaid_finalproject.ui.SettingsScreen
 import com.example.mutualaid_finalproject.ui.SignInScreen
+import com.example.mutualaid_finalproject.ui.Time
 import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import kotlinx.coroutines.CoroutineScope
@@ -186,7 +187,8 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                     name="name",
                     description="I'm a cool guy!",
                     skills=listOf("sewing", "editing"),
-                    resources=listOf("clothes", "food")
+                    resources=listOf("clothes", "food"),
+                    availability=listOf(Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false))
                 )
                 1 -> NewPostScreen(postFunction={})
                 2 -> SearchScreen()
