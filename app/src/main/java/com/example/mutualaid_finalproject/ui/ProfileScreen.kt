@@ -76,6 +76,6 @@ fun ProfileScreenPreview() {
         description="I'm a cool guy!",
         skills=listOf("sewing", "editing"),
         resources=listOf("clothes", "food"),
-        availability = listOf(True, False, True)
+        availability = listOf(Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false))
     )
 }
