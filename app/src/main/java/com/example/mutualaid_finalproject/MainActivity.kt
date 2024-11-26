@@ -1,70 +1,42 @@
 package com.example.mutualaid_finalproject
 
 import android.app.Application
-import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetCredentialResponse
 import androidx.credentials.GetPasswordOption
-import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -77,18 +49,8 @@ import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
 import com.example.mutualaid_finalproject.ui.SettingsScreen
 import com.example.mutualaid_finalproject.ui.SignInScreen
-import com.example.mutualaid_finalproject.ui.TestDatabaseScreen
 import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
-import com.firebase.ui.auth.AuthUI
-import com.firebase.ui.auth.AuthUI.IdpConfig
-import com.firebase.ui.auth.AuthUI.IdpConfig.EmailBuilder
-import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
-import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
-import com.google.firebase.auth.ActionCodeSettings
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -119,15 +81,15 @@ class MainActivity : ComponentActivity() {
                             LocalContext.current.applicationContext as Application
                         )
                     )
-//                    MainNavigation(viewModel=viewModel, onLaunchSignIn = {launchSignIn()})
+                    MainNavigation(viewModel=viewModel, onLogin={email, password -> viewModel.handleSignIn(email, password, this)}, onSignup={email, password -> viewModel.handleSignUp(email, password, this)}, onGoogleLogin = {launchSignIn(viewModel)})
 //                    DistanceCalculator("GET API KEY FROM GOOGLE DOC :3")
-                    TestDatabaseScreen(viewModel=viewModel)
+//                    TestDatabaseScreen(viewModel=viewModel)
                 }
             }
         }
     }
 
-    fun launchSignIn() {
+    private fun launchSignIn(viewModel: MainViewModel) {
         val getPasswordOption = GetPasswordOption()
 
         // Get passkey from the user's public key credential provider.
@@ -158,60 +120,25 @@ class MainActivity : ComponentActivity() {
                     context = this@MainActivity,
                     request = getCredRequest
                 )
-                handleSignIn(result)
+                viewModel.handleSignIn(result, this@MainActivity)
             } catch (e : GetCredentialException) {
                 Log.e("CredentialManager", e.errorMessage.toString())
-            }
-        }
-    }
-
-    private fun handleSignIn(result: GetCredentialResponse) {
-        val credential = result.credential
-        when (credential) {
-            is CustomCredential -> {
-                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                    try {
-                        // Use googleIdTokenCredential and extract the ID to validate and
-                        // authenticate on your server.
-                        val googleIdTokenCredential = GoogleIdTokenCredential
-                            .createFrom(credential.data)
-                        // You can use the members of googleIdTokenCredential directly for UX
-                        // purposes, but don't use them to store or control access to user
-                        // data. For that you first need to validate the token:
-                        // pass googleIdTokenCredential.getIdToken() to the backend server.
-
-//                        GoogleIdTokenVerifier verifier = ... // see validation instructions
-//                        GoogleIdToken idToken = verifier.verify(idTokenString);
-
-                        // To get a stable account identifier (e.g. for storing user data),
-                        // use the subject ID:
-
-//                        idToken.getPayload().getSubject()
-                    } catch (e: GoogleIdTokenParsingException) {
-                        Log.e("CredentialManager", "Received an invalid google id token response", e)
-                    }
-                } else {
-                    Log.e("CredentialManager", "Unexpected type of credential (custom)")
-                }
-            }
-            else -> {
-                Log.e("CredentialManager", "Unexpected type of credential")
             }
         }
     }
 }
 
 @Composable
-fun MainNavigation(viewModel: MainViewModel, onLaunchSignIn: () -> Unit) { // Outermost composable where probably all/most of the UI logic can go
+fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin: (String, String) -> Unit, onSignup: (String, String) -> Unit) { // Outermost composable where probably all/most of the UI logic can go
     var selectedItem by remember {mutableIntStateOf(0)}
-    var signedIn by rememberSaveable {mutableStateOf(false)} // Temporary until this can be checked directly
+    val currentUID by viewModel.currentUID.observeAsState()
 
-    if (!signedIn) {
+    if (currentUID == null) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
         ) { innerPadding ->
             Box(modifier=Modifier.padding(innerPadding)) {
-                SignInScreen(loginFunction={_,_ -> signedIn = true; onLaunchSignIn()}, signupFunction={_,_ ->}) // This might be removed later if we can just directly launch the firebase UI
+                SignInScreen(onLogin=onLogin, onSignup=onSignup, onGoogleLogin=onGoogleLogin)
             }
         }
         return
@@ -219,6 +146,9 @@ fun MainNavigation(viewModel: MainViewModel, onLaunchSignIn: () -> Unit) { // Ou
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        topBar = {
+            Text(currentUID ?: "No User", modifier=Modifier.padding(8.dp, 16.dp))
+        },
         bottomBar = {
             NavigationBar() {
                 NavigationBarItem(

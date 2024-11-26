@@ -24,7 +24,7 @@ fun TestDatabaseScreen(viewModel: MainViewModel, modifier: Modifier = Modifier) 
         Spacer(modifier=Modifier.height(16.dp))
         Row {
             OutlinedTextField(username, {username = it}, label={Text("Username")})
-            Button(onClick={viewModel.createNewUser(username)}) {
+            Button(onClick={viewModel.createNewProfile(username)}) {
                 Text("New User")
             }
         }
