@@ -1,9 +1,21 @@
 package com.example.mutualaid_finalproject.model
 
+import androidx.lifecycle.MutableLiveData
 import com.example.mutualaid_finalproject.model.firestore.RemoteProfilesDao
+import com.google.firebase.firestore.DocumentSnapshot
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
-class ProfileRepository(private val uid: String, onCreate: () -> Unit) {
-    private val remoteProfilesDao = RemoteProfilesDao()
+class ProfileRepository(private val uid: String = "NO_USER", onCreate: () -> Unit = {}) {
+    private val coroutineScope = CoroutineScope(Dispatchers.Main)
+
+    private var remoteProfilesDao = RemoteProfilesDao(uid)
+
+    var currentProfile = remoteProfilesDao.getCurrentUserFlow().map {
+            value: DocumentSnapshot? -> remoteProfilesDao.toProfile(value)
+    }
 
     init {
         get(uid) { profile->
@@ -21,6 +33,14 @@ class ProfileRepository(private val uid: String, onCreate: () -> Unit) {
             } else {
                 onCreate()
             }
+        }
+    }
+
+    fun setListeningProfile(uid: String = "NO_USER") {
+        remoteProfilesDao.close()
+        remoteProfilesDao = RemoteProfilesDao(uid)
+        currentProfile = remoteProfilesDao.getCurrentUserFlow().map {
+            value: DocumentSnapshot? -> remoteProfilesDao.toProfile(value)
         }
     }
 
