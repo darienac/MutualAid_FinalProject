@@ -45,6 +45,8 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.ui.NewPostScreen
+import com.example.mutualaid_finalproject.ui.Post
+import com.example.mutualaid_finalproject.ui.PostType
 import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
 import com.example.mutualaid_finalproject.ui.SettingsScreen
@@ -133,6 +135,93 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin: (String, String) -> Unit, onSignup: (String, String) -> Unit) { // Outermost composable where probably all/most of the UI logic can go
+    val posts = listOf(
+        Post(
+            postId = "123",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Math Tutor",
+            location = "Boston, MA"
+        ),
+        Post(
+            postId = "124",
+            type = PostType.OFFER,
+            isAccepted = true,
+            title = "Grocery Delivery",
+            location = "Philadelphia, PA"
+        ),
+        Post(
+            postId = "125",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Dog Walker Needed",
+            location = "New York, NY"
+        ),
+        Post(
+            postId = "123",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Math Tutor",
+            location = "Boston, MA"
+        ),
+        Post(
+            postId = "124",
+            type = PostType.OFFER,
+            isAccepted = true,
+            title = "Grocery Delivery",
+            location = "Philadelphia, PA"
+        ),
+        Post(
+            postId = "125",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Dog Walker Needed",
+            location = "New York, NY"
+        ),
+        Post(
+            postId = "123",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Math Tutor",
+            location = "Boston, MA"
+        ),
+        Post(
+            postId = "124",
+            type = PostType.OFFER,
+            isAccepted = true,
+            title = "Grocery Delivery",
+            location = "Philadelphia, PA"
+        ),
+        Post(
+            postId = "125",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Dog Walker Needed",
+            location = "New York, NY"
+        ),
+        Post(
+            postId = "123",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Math Tutor",
+            location = "Boston, MA"
+        ),
+        Post(
+            postId = "124",
+            type = PostType.OFFER,
+            isAccepted = true,
+            title = "Grocery Delivery",
+            location = "Philadelphia, PA"
+        ),
+        Post(
+            postId = "125",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Dog Walker Needed",
+            location = "New York, NY"
+        )
+
+    )
     var selectedItem by remember {mutableIntStateOf(0)}
     val currentUser by viewModel.currentUser.observeAsState()
 
@@ -192,8 +281,9 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                     resources=listOf("clothes", "food"),
                     availability=listOf(Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false))
                 )
+
                 1 -> NewPostScreen(postFunction={})
-                2 -> SearchScreen()
+                2 -> SearchScreen(modifier = Modifier, posts, viewModel, onSearch = {_,_,_->}, onPostClicked = {_ ->})
                 3 -> SettingsScreen()
             }
         }
