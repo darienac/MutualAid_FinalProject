@@ -56,10 +56,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 
 
 class MainActivity : ComponentActivity() {
@@ -83,7 +85,7 @@ class MainActivity : ComponentActivity() {
                         )
                     )
                     MainNavigation(viewModel=viewModel, onLogin={email, password -> viewModel.handleSignIn(email, password, this)}, onSignup={email, password -> viewModel.handleSignUp(email, password, this)}, onGoogleLogin = {launchSignIn(viewModel)})
-//                    DistanceCalculator("GET API KEY FROM GOOGLE DOC :3")
+//                    DistanceCalculator("insert the api key")
 //                    TestDatabaseScreen(viewModel=viewModel)
                 }
             }
@@ -259,9 +261,13 @@ fun DistanceCalculator(apiKey: String) {
                 // Use the Retrofit interface to make API calls.
                 // Call API to calculate distance
                 CoroutineScope(Dispatchers.IO).launch {
+                    val moshi = Moshi.Builder()
+                        .add(KotlinJsonAdapterFactory())
+                        .build()
+
                     val service = Retrofit.Builder()
                         .baseUrl("https://maps.googleapis.com/maps/api/")
-                        .addConverterFactory(GsonConverterFactory.create())
+                        .addConverterFactory(MoshiConverterFactory.create(moshi))
                         .build()
                         .create(DistanceMatrixService::class.java)
 
@@ -281,7 +287,11 @@ fun DistanceCalculator(apiKey: String) {
             Text("Calculate Distance")
         }
         distance?.let {
-            Text(text = "Distance: $it", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 16.dp))
+            Text(
+                text = "Distance: $it",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 16.dp)
+            )
         }
     }
 }
