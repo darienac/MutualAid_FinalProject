@@ -29,6 +29,7 @@ class MainViewModel(application: Application) : ViewModel() {
 
     var currentUser = MutableLiveData<UserData?>()
     var profileRepository = ProfileRepository() // this is public so the UI controller can access this directly
+    var postRepository = PostRepository() // this is public so the UI controller can access this directly
 
     private fun updateCurrentUser(user: FirebaseUser?) {
         if (user?.uid == null) {
