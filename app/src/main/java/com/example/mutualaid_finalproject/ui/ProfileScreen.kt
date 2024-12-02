@@ -8,11 +8,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import java.sql.Time
 
 @Composable
 fun ProfileScreen(
@@ -41,14 +44,27 @@ fun ProfileScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp).verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
+        // Profile Header
+        Text(
+            text = "Profile",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+
         // Username Section
-        Text(text = "Profile", modifier = Modifier.fillMaxWidth())
-        Text(text = "Username: $username", modifier = Modifier.fillMaxWidth())
+        Text(
+            text = "Username: $username",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         // Name Section
+        SectionHeader("Name")
         if (editName) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
@@ -61,7 +77,7 @@ fun ProfileScreen(
                     onNameChange(newName)
                     editName = false
                 }) {
-                    Text("Done")
+                    Text("Save")
                 }
             }
         } else {
@@ -74,6 +90,7 @@ fun ProfileScreen(
         }
 
         // Description Section
+        SectionHeader("Description")
         if (editDescription) {
             Column {
                 OutlinedTextField(
@@ -86,7 +103,7 @@ fun ProfileScreen(
                     onDescriptionChange(newDescription)
                     editDescription = false
                 }) {
-                    Text("Done")
+                    Text("Save")
                 }
             }
         } else {
@@ -99,17 +116,14 @@ fun ProfileScreen(
         }
 
         // Skills Section
-        Text(text = "Skills", modifier = Modifier.fillMaxWidth())
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        SectionHeader("Skills")
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(skills) { skill ->
-                Text(text = "- $skill")
+                Text(text = "- $skill", style = MaterialTheme.typography.bodyLarge)
             }
             item {
                 if (editSkills) {
-                    Row {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         OutlinedTextField(
                             value = newSkill,
                             onValueChange = { newSkill = it },
@@ -133,17 +147,14 @@ fun ProfileScreen(
         }
 
         // Resources Section
-        Text(text = "Resources", modifier = Modifier.fillMaxWidth())
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        SectionHeader("Resources")
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(resources) { resource ->
-                Text(text = "- $resource")
+                Text(text = "- $resource", style = MaterialTheme.typography.bodyLarge)
             }
             item {
                 if (editResources) {
-                    Row {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         OutlinedTextField(
                             value = newResource,
                             onValueChange = { newResource = it },
@@ -167,7 +178,7 @@ fun ProfileScreen(
         }
 
         // Availability Section
-        Text(text = "Availability", modifier = Modifier.fillMaxWidth())
+        SectionHeader("Availability")
         val days = listOf("Sun", "Mon", "Tues", "Weds", "Thurs", "Fri", "Sat")
         days.forEachIndexed { index, day ->
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
@@ -182,15 +193,18 @@ fun ProfileScreen(
     }
 }
 
-// Availability Data Class
-class Time(
-    val morning: Boolean,
-    val afternoon: Boolean,
-    val evening: Boolean
-)
-
 @Composable
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+// Preview
 @Preview
+@Composable
 fun ProfileScreenPreview() {
     ProfileScreen(
         username = "test_user",
@@ -199,7 +213,7 @@ fun ProfileScreenPreview() {
         skills = listOf("Cooking", "Gardening"),
         resources = listOf("Lawn Mower", "Extra Seeds"),
         availability = List(7) { Time(false, false, false) },
-        onNameChange = { newName -> println("Name changed to: $newName") },
+        onNameChange = { println("Name changed to: $it") },
         onDescriptionChange = { println("Description changed to: $it") },
         addSkill = { println("Added skill: $it") },
         addResource = { println("Added resource: $it") },
