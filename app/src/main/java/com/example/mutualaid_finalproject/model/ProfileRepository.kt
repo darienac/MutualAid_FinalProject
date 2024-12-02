@@ -47,6 +47,10 @@ class ProfileRepository(private val uid: String = "NO_USER", onCreate: () -> Uni
     fun set(profile: Profile, onResult:()->Unit) {
         remoteProfilesDao.set(profile, onResult=onResult)
     }
+
+    fun delete(uid: String, onResult:()->Unit) {
+        remoteProfilesDao.delete(uid, onResult=onResult)
+    }
 }
 
 // TODO: add live view of this user's profile with LiveData, use RemoteProfilesDao to create snapshot listener

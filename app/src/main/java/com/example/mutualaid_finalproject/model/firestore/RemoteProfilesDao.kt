@@ -77,6 +77,12 @@ class RemoteProfilesDao(private val uid: String) {
             .addOnFailureListener(onError)
     }
 
+    fun delete(uid: String, onResult:()->Unit, onError:(Exception)->Unit={Log.w(TAG, "Failed delete()")}) {
+        collection.document(uid).delete()
+            .addOnSuccessListener { onResult() }
+            .addOnFailureListener(onError)
+    }
+
     fun close() {
         listener?.remove()
     }
