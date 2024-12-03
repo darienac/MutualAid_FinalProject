@@ -82,4 +82,6 @@ dependencies {
     implementation(libs.retrofit)
     // Gson converter for JSON parsing
     implementation(libs.converter.gson)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 }

@@ -5,6 +5,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,11 +17,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 
 @Composable
 fun NewPostScreen(
     modifier: Modifier = Modifier,
+    username: String,
     postFunction: (
         postId: String,
         type: String,
@@ -37,7 +40,6 @@ fun NewPostScreen(
     var postId by remember { mutableStateOf(java.util.UUID.randomUUID().toString()) }
     var type by remember { mutableStateOf("") }
     var accepted by remember { mutableStateOf(false) }
-    var username by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
@@ -58,6 +60,7 @@ fun NewPostScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
         Text(
@@ -87,13 +90,6 @@ fun NewPostScreen(
             onValueChange = { description = it },
             label = { Text("Description") },
             placeholder = { Text("Write your post details...") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Username") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -190,6 +186,7 @@ fun NewPostScreen(
 @Composable
 fun NewPostScreenPreview() {
     NewPostScreen(
+        username="coolguy",
         postFunction = { postId, type, accepted, username, title, description, imageUri, location, datePosted, dateLatest, tags ->
             println("Post created with:\nID: $postId\nType: $type\nAccepted: $accepted\nUsername: $username\nTitle: $title\nDescription: $description\nImage URI: $imageUri\nLocation: $location\nDate Posted: $datePosted\nDate Latest: $dateLatest\nTags: $tags")
         }

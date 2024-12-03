@@ -188,14 +188,14 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
             }
         }
     ) { innerPadding ->
-        Box(modifier=Modifier.padding(innerPadding)) {
+        Box(modifier=Modifier.fillMaxSize().padding(innerPadding)) {
             when (selectedItem) {
                 0 -> ProfileScreen(
-                    modifier=Modifier.padding(innerPadding),
+                    modifier=Modifier,
                     username="username",
                     name="name",
                     description="I'm a cool guy!",
-                    skills=listOf("sewing", "editing"),
+                    skills=listOf("sewing", "editing", "sewing", "editing", "sewing", "editing", "sewing", "editing", "sewing", "editing", "sewing", "editing", "sewing", "editing"),
                     resources=listOf("clothes", "food"),
                     onNameChange={},
                     onDescriptionChange={},
@@ -211,9 +211,12 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                         Time(false, false, false),
                         Time(false, false, false))
                 )
-                1 -> NewPostScreen(postFunction={})
+                1 -> NewPostScreen(
+                    postFunction = { _, _, _, _, _, _, _, _, _, _, _ -> },
+                    username = currentUser?.uid ?: ""
+                )
                 2 -> SearchScreen()
-                3 -> SettingsScreen()
+                3 -> SettingsScreen(logout={})
             }
         }
     }
