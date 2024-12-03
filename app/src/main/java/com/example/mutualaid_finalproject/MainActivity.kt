@@ -3,6 +3,7 @@ package com.example.mutualaid_finalproject
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,6 +26,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -44,6 +46,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mutualaid_finalproject.model.MainViewModel
+import com.example.mutualaid_finalproject.model.Profile
 import com.example.mutualaid_finalproject.ui.NewPostScreen
 import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
@@ -124,6 +127,11 @@ class MainActivity : ComponentActivity() {
                 viewModel.handleSignIn(result, this@MainActivity)
             } catch (e : GetCredentialException) {
                 Log.e("CredentialManager", e.errorMessage.toString())
+                Toast.makeText(
+                    this@MainActivity,
+                    e.errorMessage.toString(),
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }
@@ -133,22 +141,23 @@ class MainActivity : ComponentActivity() {
 fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin: (String, String) -> Unit, onSignup: (String, String) -> Unit) { // Outermost composable where probably all/most of the UI logic can go
     var selectedItem by remember {mutableIntStateOf(0)}
     val currentUser by viewModel.currentUser.observeAsState()
+    val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
 
-//    if (currentUser == null) {
-//        Scaffold(
-//            modifier = Modifier.fillMaxSize(),
-//        ) { innerPadding ->
-//            Box(modifier=Modifier.padding(innerPadding)) {
-//                SignInScreen(onLogin=onLogin, onSignup=onSignup, onGoogleLogin=onGoogleLogin)
-//            }
-//        }
-//        return
-//    }
+    if (currentUser == null || currentProfile == null) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+        ) { innerPadding ->
+            Box(modifier=Modifier.padding(innerPadding)) {
+                SignInScreen(onLogin=onLogin, onSignup=onSignup, onGoogleLogin=onGoogleLogin)
+            }
+        }
+        return
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            Text(currentUser?.email ?: "No User", modifier=Modifier.padding(8.dp, 16.dp))
+            Text(currentProfile?.name ?: "No Name", modifier=Modifier.padding(8.dp, 16.dp))
         },
         bottomBar = {
             NavigationBar() {
