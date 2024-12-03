@@ -47,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.model.Profile
+import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
 import com.example.mutualaid_finalproject.ui.NewPostScreen
 import com.example.mutualaid_finalproject.ui.Post
 import com.example.mutualaid_finalproject.ui.PostType
@@ -54,7 +55,6 @@ import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
 import com.example.mutualaid_finalproject.ui.SettingsScreen
 import com.example.mutualaid_finalproject.ui.SignInScreen
-import com.example.mutualaid_finalproject.ui.Time
 import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import kotlinx.coroutines.CoroutineScope
@@ -283,24 +283,43 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
             when (selectedItem) {
                 0 -> ProfileScreen(
                     modifier=Modifier,
-                    username="username",
-                    name="name",
-                    description="I'm a cool guy!",
-                    skills=listOf("sewing", "editing"),
-                    resources=listOf("clothes", "food"),
-                    onNameChange={},
+                    username=currentUser?.email ?: "",
+                    name=currentProfile?.name ?: "",
+                    description="Not yet in database schema",
+                    skills=currentProfile?.skills ?: listOf(),
+                    resources=currentProfile?.resources ?: listOf(),
+                    availability=currentProfile?.daysAvailable ?: listOf(
+                        ProfileTimeAvailability(false, false, false),
+                        ProfileTimeAvailability(false, false, false),
+                        ProfileTimeAvailability(false, false, false),
+                        ProfileTimeAvailability(false, false, false),
+                        ProfileTimeAvailability(false, false, false),
+                        ProfileTimeAvailability(false, false, false),
+                        ProfileTimeAvailability(false, false, false)),
+                    onNameChange={ name->
+                        currentProfile?.copy(name=name)?.let { viewModel.profileRepository.set(it, {}) }
+                    },
                     onDescriptionChange={},
-                    addSkill={},
-                    addResource={},
-                    changeAvailability={_, _ ->},
-                    availability=listOf(
-                        Time(false, false, false),
-                        Time(false, false, false),
-                        Time(false, false, false),
-                        Time(false, false, false),
-                        Time(false, false, false),
-                        Time(false, false, false),
-                        Time(false, false, false))
+                    addSkill={ skill->
+                        currentProfile?.copy(skills=currentProfile?.skills?.plus(skill) ?: listOf(skill))?.let { viewModel.profileRepository.set(it, {}) }
+                    },
+                    addResource={ resource->
+                        currentProfile?.copy(resources=currentProfile?.resources?.plus(resource) ?: listOf(resource))?.let { viewModel.profileRepository.set(it, {}) }
+                    },
+                    changeAvailability={ index, time ->
+                        var newAvailability = currentProfile?.daysAvailable?.toMutableList()
+                        if (newAvailability != null) {
+                            if (time == "Morning") {
+                                newAvailability[index] = newAvailability[index].copy(morning=!newAvailability[index].morning)
+                            } else if (time == "Afternoon") {
+                                newAvailability[index] = newAvailability[index].copy(afternoon=!newAvailability[index].afternoon)
+                            } else if (time == "Evening") {
+                                newAvailability[index] = newAvailability[index].copy(evening=!newAvailability[index].evening)
+                            }
+
+                            currentProfile?.copy(daysAvailable = newAvailability)?.let { viewModel.profileRepository.set(it, {}) }
+                        }
+                    }
                 )
 
                 1 -> NewPostScreen(
@@ -308,7 +327,9 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                     username = currentUser?.uid ?: ""
                 )
                 2 -> SearchScreen(modifier = Modifier, posts, viewModel, onSearch = {_,_,_->}, onPostClicked = {_ ->})
-                3 -> SettingsScreen(logout={})
+                3 -> SettingsScreen(logout={
+                    viewModel.logout()
+                })
             }
         }
     }
