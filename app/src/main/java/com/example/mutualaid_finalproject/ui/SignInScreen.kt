@@ -1,13 +1,17 @@
 package com.example.mutualaid_finalproject.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.mutualaid_finalproject.R
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -65,9 +69,16 @@ fun SignInScreen(
         Button(
             onClick = onGoogleLogin,
             modifier = Modifier.fillMaxWidth(),
-            colors=ButtonColors(Color.Black, Color.White, Color.Black, Color.White)
+            colors=ButtonColors(Color.Black, Color.White, Color.Black, Color.White),
         ) {
-            Text(text = "Sign in with Google", color=Color.White)
+            Row(verticalAlignment=Alignment.CenterVertically) {
+                Image(
+                    painter=painterResource(id=R.drawable.google_icon),
+                    contentDescription="Google Icon",
+                    modifier=Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp).width(16.dp)
+                )
+                Text(text = "Sign in with Google", color=Color.White)
+            }
         }
     }
 }
