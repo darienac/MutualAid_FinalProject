@@ -1,9 +1,15 @@
 package com.example.mutualaid_finalproject.model
 
 import com.example.mutualaid_finalproject.model.firestore.RemoteProfilesDao
+import com.google.firebase.firestore.DocumentSnapshot
+import kotlinx.coroutines.flow.map
 
-class ProfileRepository(private val uid: String, onCreate: () -> Unit) {
-    private val remoteProfilesDao = RemoteProfilesDao()
+class ProfileRepository(private val uid: String = "NO_USER", onCreate: () -> Unit = {}) {
+    private var remoteProfilesDao = RemoteProfilesDao(uid)
+
+    var currentProfile = remoteProfilesDao.getCurrentUserFlow().map {
+            value: DocumentSnapshot? -> remoteProfilesDao.toProfile(value)
+    }
 
     init {
         get(uid) { profile->
@@ -24,6 +30,14 @@ class ProfileRepository(private val uid: String, onCreate: () -> Unit) {
         }
     }
 
+    fun setListeningProfile(uid: String = "NO_USER") {
+        remoteProfilesDao.close()
+        remoteProfilesDao = RemoteProfilesDao(uid)
+        currentProfile = remoteProfilesDao.getCurrentUserFlow().map {
+            value: DocumentSnapshot? -> remoteProfilesDao.toProfile(value)
+        }
+    }
+
     fun get(uid: String, onResult:(Profile?)->Unit) {
         remoteProfilesDao.get(uid, onResult={
             onResult(remoteProfilesDao.toProfile(it))
@@ -32,6 +46,10 @@ class ProfileRepository(private val uid: String, onCreate: () -> Unit) {
 
     fun set(profile: Profile, onResult:()->Unit) {
         remoteProfilesDao.set(profile, onResult=onResult)
+    }
+
+    fun delete(uid: String, onResult:()->Unit) {
+        remoteProfilesDao.delete(uid, onResult=onResult)
     }
 }
 
