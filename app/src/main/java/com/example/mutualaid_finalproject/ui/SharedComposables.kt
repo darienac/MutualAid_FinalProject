@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.example.mutualaid_finalproject.R
 
 @Composable
-fun LocationInput(onSearch: (String) -> Unit
+fun LocationInput(maxDistance: Float, selectedOption: String, onSearch: (String, Float, String) -> Unit
 ) {
     var query by remember { mutableStateOf("") }
 
@@ -68,7 +68,7 @@ fun LocationInput(onSearch: (String) -> Unit
             contentDescription = "Search Icon",
             modifier = Modifier
                 .size(24.dp)
-                .clickable { onSearch(query) },
+                .clickable { onSearch(query, maxDistance, selectedOption) }, // CHANGE LATER TO GET INFO
             tint = MaterialTheme.colorScheme.primary
         )
     }

@@ -48,6 +48,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.model.Profile
 import com.example.mutualaid_finalproject.ui.NewPostScreen
+import com.example.mutualaid_finalproject.ui.Post
+import com.example.mutualaid_finalproject.ui.PostType
 import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
 import com.example.mutualaid_finalproject.ui.SettingsScreen
@@ -59,10 +61,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 
 
 class MainActivity : ComponentActivity() {
@@ -139,6 +143,93 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin: (String, String) -> Unit, onSignup: (String, String) -> Unit) { // Outermost composable where probably all/most of the UI logic can go
+    val posts = listOf(
+        Post(
+            postId = "123",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Math Tutor",
+            location = "Boston, MA"
+        ),
+        Post(
+            postId = "124",
+            type = PostType.OFFER,
+            isAccepted = true,
+            title = "Grocery Delivery",
+            location = "Philadelphia, PA"
+        ),
+        Post(
+            postId = "125",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Dog Walker Needed",
+            location = "New York, NY"
+        ),
+        Post(
+            postId = "123",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Math Tutor",
+            location = "Boston, MA"
+        ),
+        Post(
+            postId = "124",
+            type = PostType.OFFER,
+            isAccepted = true,
+            title = "Grocery Delivery",
+            location = "Philadelphia, PA"
+        ),
+        Post(
+            postId = "125",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Dog Walker Needed",
+            location = "New York, NY"
+        ),
+        Post(
+            postId = "123",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Math Tutor",
+            location = "Boston, MA"
+        ),
+        Post(
+            postId = "124",
+            type = PostType.OFFER,
+            isAccepted = true,
+            title = "Grocery Delivery",
+            location = "Philadelphia, PA"
+        ),
+        Post(
+            postId = "125",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Dog Walker Needed",
+            location = "New York, NY"
+        ),
+        Post(
+            postId = "123",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Math Tutor",
+            location = "Boston, MA"
+        ),
+        Post(
+            postId = "124",
+            type = PostType.OFFER,
+            isAccepted = true,
+            title = "Grocery Delivery",
+            location = "Philadelphia, PA"
+        ),
+        Post(
+            postId = "125",
+            type = PostType.REQUEST,
+            isAccepted = false,
+            title = "Dog Walker Needed",
+            location = "New York, NY"
+        )
+
+    )
     var selectedItem by remember {mutableIntStateOf(0)}
     val currentUser by viewModel.currentUser.observeAsState()
     val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
@@ -195,7 +286,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                     username="username",
                     name="name",
                     description="I'm a cool guy!",
-                    skills=listOf("sewing", "editing", "sewing", "editing", "sewing", "editing", "sewing", "editing", "sewing", "editing", "sewing", "editing", "sewing", "editing"),
+                    skills=listOf("sewing", "editing"),
                     resources=listOf("clothes", "food"),
                     onNameChange={},
                     onDescriptionChange={},
@@ -211,11 +302,12 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                         Time(false, false, false),
                         Time(false, false, false))
                 )
+
                 1 -> NewPostScreen(
                     postFunction = { _, _, _, _, _, _, _, _, _, _, _ -> },
                     username = currentUser?.uid ?: ""
                 )
-                2 -> SearchScreen()
+                2 -> SearchScreen(modifier = Modifier, posts, viewModel, onSearch = {_,_,_->}, onPostClicked = {_ ->})
                 3 -> SettingsScreen(logout={})
             }
         }
@@ -283,9 +375,13 @@ fun DistanceCalculator(apiKey: String) {
                 // Use the Retrofit interface to make API calls.
                 // Call API to calculate distance
                 CoroutineScope(Dispatchers.IO).launch {
+                    val moshi = Moshi.Builder()
+                        .add(KotlinJsonAdapterFactory())
+                        .build()
+
                     val service = Retrofit.Builder()
                         .baseUrl("https://maps.googleapis.com/maps/api/")
-                        .addConverterFactory(GsonConverterFactory.create())
+                        .addConverterFactory(MoshiConverterFactory.create(moshi))
                         .build()
                         .create(DistanceMatrixService::class.java)
 
@@ -305,7 +401,11 @@ fun DistanceCalculator(apiKey: String) {
             Text("Calculate Distance")
         }
         distance?.let {
-            Text(text = "Distance: $it", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 16.dp))
+            Text(
+                text = "Distance: $it",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 16.dp)
+            )
         }
     }
 }
