@@ -1,10 +1,12 @@
 package com.example.mutualaid_finalproject.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -15,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import java.sql.Time
+import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
 
 @Composable
 fun ProfileScreen(
@@ -25,7 +27,7 @@ fun ProfileScreen(
     description: String,
     skills: List<String>,
     resources: List<String>,
-    availability: List<Time>,
+    availability: List<ProfileTimeAvailability>,
     onNameChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     addSkill: (String) -> Unit,
@@ -44,8 +46,8 @@ fun ProfileScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         // Profile Header
@@ -117,7 +119,7 @@ fun ProfileScreen(
 
         // Skills Section
         SectionHeader("Skills")
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier=Modifier.height(128.dp).fillMaxWidth().background(MaterialTheme.colorScheme.secondaryContainer)) {
             items(skills) { skill ->
                 Text(text = "- $skill", style = MaterialTheme.typography.bodyLarge)
             }
@@ -148,7 +150,7 @@ fun ProfileScreen(
 
         // Resources Section
         SectionHeader("Resources")
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier=Modifier.height(128.dp).fillMaxWidth().background(MaterialTheme.colorScheme.secondaryContainer)) {
             items(resources) { resource ->
                 Text(text = "- $resource", style = MaterialTheme.typography.bodyLarge)
             }
@@ -184,8 +186,18 @@ fun ProfileScreen(
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Text(text = day, modifier = Modifier.weight(1f))
                 listOf("Morning", "Afternoon", "Evening").forEach { time ->
-                    TextButton(onClick = { changeAvailability(index, time) }) {
-                        Text(text = time)
+                    var active =
+                        (time == "Morning" && availability[index].morning) ||
+                        (time == "Afternoon" && availability[index].afternoon) ||
+                        (time == "Evening" && availability[index].evening)
+                    if (active) {
+                        FilledTonalButton(onClick = { changeAvailability(index, time) }) {
+                            Text(text = time)
+                        }
+                    } else {
+                        TextButton(onClick = { changeAvailability(index, time) }) {
+                            Text(text = time)
+                        }
                     }
                 }
             }
@@ -212,7 +224,7 @@ fun ProfileScreenPreview() {
         description = "I am a friendly neighbor.",
         skills = listOf("Cooking", "Gardening"),
         resources = listOf("Lawn Mower", "Extra Seeds"),
-        availability = List(7) { Time(false, false, false) },
+        availability = List(7) { ProfileTimeAvailability(false, false, false) },
         onNameChange = { println("Name changed to: $it") },
         onDescriptionChange = { println("Description changed to: $it") },
         addSkill = { println("Added skill: $it") },

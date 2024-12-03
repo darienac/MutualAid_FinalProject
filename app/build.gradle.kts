@@ -81,5 +81,11 @@ dependencies {
     // Retrofit core library
     implementation(libs.retrofit)
     // Gson converter for JSON parsing
+    //implementation(libs.converter.gson)
+
+    implementation(libs.converter.moshi)
+    implementation(libs.moshi.kotlin)
     implementation(libs.converter.gson)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 }
