@@ -85,4 +85,7 @@ dependencies {
 
     implementation(libs.converter.moshi)
     implementation(libs.moshi.kotlin)
+    implementation(libs.converter.gson)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 }

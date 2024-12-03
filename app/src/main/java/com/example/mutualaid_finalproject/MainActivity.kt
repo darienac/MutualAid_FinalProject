@@ -3,6 +3,7 @@ package com.example.mutualaid_finalproject
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,6 +26,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -44,6 +46,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mutualaid_finalproject.model.MainViewModel
+import com.example.mutualaid_finalproject.model.Profile
 import com.example.mutualaid_finalproject.ui.NewPostScreen
 import com.example.mutualaid_finalproject.ui.Post
 import com.example.mutualaid_finalproject.ui.PostType
@@ -87,7 +90,7 @@ class MainActivity : ComponentActivity() {
                         )
                     )
                     MainNavigation(viewModel=viewModel, onLogin={email, password -> viewModel.handleSignIn(email, password, this)}, onSignup={email, password -> viewModel.handleSignUp(email, password, this)}, onGoogleLogin = {launchSignIn(viewModel)})
-//                    DistanceCalculator("insert the api key")
+//                    DistanceCalculator("GET API KEY FROM GOOGLE DOC :3")
 //                    TestDatabaseScreen(viewModel=viewModel)
                 }
             }
@@ -128,6 +131,11 @@ class MainActivity : ComponentActivity() {
                 viewModel.handleSignIn(result, this@MainActivity)
             } catch (e : GetCredentialException) {
                 Log.e("CredentialManager", e.errorMessage.toString())
+                Toast.makeText(
+                    this@MainActivity,
+                    e.errorMessage.toString(),
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         }
     }
@@ -224,8 +232,9 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
     )
     var selectedItem by remember {mutableIntStateOf(0)}
     val currentUser by viewModel.currentUser.observeAsState()
+    val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
 
-    if (currentUser == null) {
+    if (currentUser == null || currentProfile == null) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
         ) { innerPadding ->
@@ -239,7 +248,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            Text(currentUser?.email ?: "No User", modifier=Modifier.padding(8.dp, 16.dp))
+            Text(currentProfile?.name ?: "No Name", modifier=Modifier.padding(8.dp, 16.dp))
         },
         bottomBar = {
             NavigationBar() {
@@ -270,21 +279,36 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
             }
         }
     ) { innerPadding ->
-        Box(modifier=Modifier.padding(innerPadding)) {
+        Box(modifier=Modifier.fillMaxSize().padding(innerPadding)) {
             when (selectedItem) {
                 0 -> ProfileScreen(
-                    modifier=Modifier.padding(innerPadding),
+                    modifier=Modifier,
                     username="username",
                     name="name",
                     description="I'm a cool guy!",
                     skills=listOf("sewing", "editing"),
                     resources=listOf("clothes", "food"),
-                    availability=listOf(Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false))
+                    onNameChange={},
+                    onDescriptionChange={},
+                    addSkill={},
+                    addResource={},
+                    changeAvailability={_, _ ->},
+                    availability=listOf(
+                        Time(false, false, false),
+                        Time(false, false, false),
+                        Time(false, false, false),
+                        Time(false, false, false),
+                        Time(false, false, false),
+                        Time(false, false, false),
+                        Time(false, false, false))
                 )
 
-                1 -> NewPostScreen(postFunction={})
+                1 -> NewPostScreen(
+                    postFunction = { _, _, _, _, _, _, _, _, _, _, _ -> },
+                    username = currentUser?.uid ?: ""
+                )
                 2 -> SearchScreen(modifier = Modifier, posts, viewModel, onSearch = {_,_,_->}, onPostClicked = {_ ->})
-                3 -> SettingsScreen()
+                3 -> SettingsScreen(logout={})
             }
         }
     }

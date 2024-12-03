@@ -28,12 +28,13 @@ class MainViewModel(application: Application) : ViewModel() {
     private val auth = Firebase.auth
 
     var currentUser = MutableLiveData<UserData?>()
-    var profileRepository: ProfileRepository? = null // this is public so the UI controller can access this directly
+    var profileRepository = ProfileRepository() // this is public so the UI controller can access this directly
+    var postRepository = PostRepository() // this is public so the UI controller can access this directly
     var distanceCalculator = DistanceCalculator() // return number miles
 
     private fun updateCurrentUser(user: FirebaseUser?) {
         if (user?.uid == null) {
-            profileRepository = null
+            profileRepository = ProfileRepository()
             currentUser.value = null
         } else {
             profileRepository = ProfileRepository(user.uid) {
