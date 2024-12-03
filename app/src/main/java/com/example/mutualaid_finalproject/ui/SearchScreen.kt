@@ -21,9 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-import com.example.mutualaid_finalproject.model.MainViewModel
-
-
 //
 //val samplePost1 = Post(
 //    postId = "1",
@@ -66,7 +63,7 @@ enum class PostType {
 data class Distance(val value: Float, val unit: String)
 
 @Composable
-fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSearchResult>, viewModel: MainViewModel, onSearch: (String, Float, String ) -> Unit, onPostClicked: (String) -> Unit) { // custom post object that includes distance
+fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSearchResult>, onSearch: (String, Float, String ) -> Unit, onPostClicked: (String) -> Unit) { // custom post object that includes distance
     // String for searchQuery, Float for maxDistance, String for all/request/offer
 //    var searchQuery by remember { mutableStateOf("") }
     var maxDistance by remember { mutableStateOf(50f) } // Maximum distance in miles
@@ -137,7 +134,16 @@ fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSear
                 }
             } else {
                 filteredPosts.forEach { post ->
-                    item {PostItem( postSearchResult = post, onPostClicked) }
+                    if (
+                        (post.distance.endsWith(" mi") && post.distance.substring(0, post.distance.length - 3).toFloat() > maxDistance) ||
+                        (selectedOption == "Request" && post.type != PostType.REQUEST) ||
+                        (selectedOption == "Offer" && post.type != PostType.OFFER)) {
+                        // Don't add to results
+                    } else {
+                        item(key=post.postId) {
+                            PostItem(postSearchResult = post, onPostClicked)
+                        }
+                    }
                 }
             }
         }

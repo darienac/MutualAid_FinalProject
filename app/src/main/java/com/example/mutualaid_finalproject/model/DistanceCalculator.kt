@@ -3,7 +3,9 @@ package com.example.mutualaid_finalproject.model
 import com.example.mutualaid_finalproject.DistanceMatrixService
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -44,6 +46,7 @@ data class Duration(val text: String, val value: Int)
 class DistanceCalculator {
 
     private val API_KEY = "AIzaSyDu9bU6T6VHCmphked1DR7zgfRcgDN4mQw"
+    private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -71,6 +74,12 @@ class DistanceCalculator {
                 e.printStackTrace()
                 null
             }
+        }
+    }
+
+    fun getDistanceAsync(origin: String, destination: String, id: String, onResult: (distance: String?, id: String) -> Unit) {
+        coroutineScope.launch(Dispatchers.IO) {
+            onResult(getDistance(origin, destination), id)
         }
     }
 }

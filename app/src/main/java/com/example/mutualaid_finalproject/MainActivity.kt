@@ -31,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -149,93 +150,30 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin: (String, String) -> Unit, onSignup: (String, String) -> Unit) { // Outermost composable where probably all/most of the UI logic can go
-    val postSearchResults = listOf(
-        PostSearchResult(
-            postId = "123",
-            type = PostType.REQUEST,
-            isAccepted = false,
-            title = "Math Tutor",
-            location = "Boston, MA"
-        ),
-        PostSearchResult(
-            postId = "124",
-            type = PostType.OFFER,
-            isAccepted = true,
-            title = "Grocery Delivery",
-            location = "Philadelphia, PA"
-        ),
-        PostSearchResult(
-            postId = "125",
-            type = PostType.REQUEST,
-            isAccepted = false,
-            title = "Dog Walker Needed",
-            location = "New York, NY"
-        ),
-        PostSearchResult(
-            postId = "123",
-            type = PostType.REQUEST,
-            isAccepted = false,
-            title = "Math Tutor",
-            location = "Boston, MA"
-        ),
-        PostSearchResult(
-            postId = "124",
-            type = PostType.OFFER,
-            isAccepted = true,
-            title = "Grocery Delivery",
-            location = "Philadelphia, PA"
-        ),
-        PostSearchResult(
-            postId = "125",
-            type = PostType.REQUEST,
-            isAccepted = false,
-            title = "Dog Walker Needed",
-            location = "New York, NY"
-        ),
-        PostSearchResult(
-            postId = "123",
-            type = PostType.REQUEST,
-            isAccepted = false,
-            title = "Math Tutor",
-            location = "Boston, MA"
-        ),
-        PostSearchResult(
-            postId = "124",
-            type = PostType.OFFER,
-            isAccepted = true,
-            title = "Grocery Delivery",
-            location = "Philadelphia, PA"
-        ),
-        PostSearchResult(
-            postId = "125",
-            type = PostType.REQUEST,
-            isAccepted = false,
-            title = "Dog Walker Needed",
-            location = "New York, NY"
-        ),
-        PostSearchResult(
-            postId = "123",
-            type = PostType.REQUEST,
-            isAccepted = false,
-            title = "Math Tutor",
-            location = "Boston, MA"
-        ),
-        PostSearchResult(
-            postId = "124",
-            type = PostType.OFFER,
-            isAccepted = true,
-            title = "Grocery Delivery",
-            location = "Philadelphia, PA"
-        ),
-        PostSearchResult(
-            postId = "125",
-            type = PostType.REQUEST,
-            isAccepted = false,
-            title = "Dog Walker Needed",
-            location = "New York, NY"
-        )
-
-    )
+//    val postSearchResults = listOf(
+//        PostSearchResult(
+//            postId = "123",
+//            type = PostType.REQUEST,
+//            isAccepted = false,
+//            title = "Math Tutor",
+//            location = "Boston, MA"
+//        ),
+//        PostSearchResult(
+//            postId = "124",
+//            type = PostType.OFFER,
+//            isAccepted = true,
+//            title = "Grocery Delivery",
+//            location = "Philadelphia, PA"
+//        ),
+//        PostSearchResult(
+//            postId = "125",
+//            type = PostType.REQUEST,
+//            isAccepted = false,
+//            title = "Dog Walker Needed",
+//            location = "New York, NY"
+//        )
+//    )
+    var postSearchResults = remember {mutableStateListOf<PostSearchResult>()}
     var selectedItem by remember {mutableIntStateOf(0)}
     val currentUser by viewModel.currentUser.observeAsState()
     val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
@@ -253,9 +191,6 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            Text(currentProfile?.name ?: "No Name", modifier=Modifier.padding(8.dp, 16.dp))
-        },
         bottomBar = {
             NavigationBar() {
                 NavigationBarItem(
@@ -356,7 +291,39 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                     },
                     username = currentUser?.uid ?: ""
                 )
-                2 -> SearchScreen(modifier = Modifier, postSearchResults, viewModel, onSearch = { _, _, _->}, onPostClicked = { _ ->})
+                2 -> SearchScreen(modifier = Modifier, postSearchResults, onSearch = {query, maxDistance, selectedOption ->
+                    viewModel.postRepository.search(query) {posts->
+                        var newPostSearchResults = mutableListOf<PostSearchResult>() // Set all at once to avoid unnecessary recompositions
+                        for (post in posts) {
+                            newPostSearchResults.add(PostSearchResult(
+                                postId=post.pid,
+                                type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
+                                isAccepted=post.accepted,
+                                title=post.title,
+                                location=post.location,
+                                distance="Unknown"
+                            ))
+                        }
+                        postSearchResults.clear()
+                        postSearchResults.addAll(newPostSearchResults)
+                        Log.d("SearchScreen", "updating with posts (${posts.size})")
+                        for (postSearchResult in postSearchResults) {
+                            if (postSearchResult.location == "") {
+                                continue
+                            }
+                            viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
+                                Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+                                for (i in 0..postSearchResults.size-1) {
+                                    if (postSearchResults[i].postId == pid) {
+                                        postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }, onPostClicked = {pid ->
+                    Log.d("SearchScreen", "pid: $pid")
+                })
                 3 -> SettingsScreen(logout={
                     viewModel.logout()
                 })

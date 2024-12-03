@@ -157,6 +157,7 @@ fun NewPostScreen(
                     tags
                 )
                 type = ""
+                title = ""
                 description = ""
                 location = ""
                 datePosted = ""
