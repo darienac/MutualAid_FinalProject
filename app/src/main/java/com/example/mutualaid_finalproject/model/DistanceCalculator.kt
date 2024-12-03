@@ -1,12 +1,9 @@
 package com.example.mutualaid_finalproject.model
 
 import com.example.mutualaid_finalproject.DistanceMatrixService
-import com.example.mutualaid_finalproject.ui.Post
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory

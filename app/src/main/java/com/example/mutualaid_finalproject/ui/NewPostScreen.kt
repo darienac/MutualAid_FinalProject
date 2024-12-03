@@ -24,9 +24,7 @@ fun NewPostScreen(
     modifier: Modifier = Modifier,
     username: String,
     postFunction: (
-        postId: String,
         type: String,
-        accepted: Boolean,
         username: String,
         title: String,
         description: String,
@@ -37,9 +35,7 @@ fun NewPostScreen(
         tags: String
     ) -> Unit
 ) {
-    var postId by remember { mutableStateOf(java.util.UUID.randomUUID().toString()) }
     var type by remember { mutableStateOf("") }
-    var accepted by remember { mutableStateOf(false) }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
@@ -147,23 +143,10 @@ fun NewPostScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Checkbox(
-                checked = accepted,
-                onCheckedChange = { accepted = it }
-            )
-            Text(text = "Accepted", modifier = Modifier.padding(start = 8.dp))
-        }
-
         Button(
             onClick = {
                 postFunction(
-                    postId,
                     type,
-                    accepted,
                     username,
                     title,
                     description,
@@ -173,6 +156,13 @@ fun NewPostScreen(
                     dateLatest,
                     tags
                 )
+                type = ""
+                description = ""
+                location = ""
+                datePosted = ""
+                dateLatest = ""
+                tags = ""
+                imageUri = null
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = title.isNotBlank() && type.isNotBlank() && description.isNotBlank()
@@ -187,8 +177,8 @@ fun NewPostScreen(
 fun NewPostScreenPreview() {
     NewPostScreen(
         username="coolguy",
-        postFunction = { postId, type, accepted, username, title, description, imageUri, location, datePosted, dateLatest, tags ->
-            println("Post created with:\nID: $postId\nType: $type\nAccepted: $accepted\nUsername: $username\nTitle: $title\nDescription: $description\nImage URI: $imageUri\nLocation: $location\nDate Posted: $datePosted\nDate Latest: $dateLatest\nTags: $tags")
+        postFunction = { type, username, title, description, imageUri, location, datePosted, dateLatest, tags ->
+            println("Post created with:\nType: $type\nUsername: $username\nTitle: $title\nDescription: $description\nImage URI: $imageUri\nLocation: $location\nDate Posted: $datePosted\nDate Latest: $dateLatest\nTags: $tags")
         }
     )
 }

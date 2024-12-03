@@ -3,10 +3,8 @@ package com.example.mutualaid_finalproject.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -14,9 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,10 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.core.widget.EdgeEffectCompat.getDistance
-import androidx.lifecycle.ViewModel
 
-import com.example.mutualaid_finalproject.model.DistanceCalculator
 import com.example.mutualaid_finalproject.model.MainViewModel
 
 
@@ -56,7 +49,7 @@ import com.example.mutualaid_finalproject.model.MainViewModel
 //    location = "New York City, NY"
 //)
 
-data class Post(
+data class PostSearchResult(
     val postId: String, // UUID
     val type: PostType, // Enum for REQUEST or OFFER
     val isAccepted: Boolean,
@@ -73,14 +66,14 @@ enum class PostType {
 data class Distance(val value: Float, val unit: String)
 
 @Composable
-fun SearchScreen(modifier: Modifier = Modifier, posts: List<Post>, viewModel: MainViewModel, onSearch: (String, Float, String ) -> Unit, onPostClicked: (String) -> Unit) { // custom post object that includes distance
+fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSearchResult>, viewModel: MainViewModel, onSearch: (String, Float, String ) -> Unit, onPostClicked: (String) -> Unit) { // custom post object that includes distance
     // String for searchQuery, Float for maxDistance, String for all/request/offer
 //    var searchQuery by remember { mutableStateOf("") }
     var maxDistance by remember { mutableStateOf(50f) } // Maximum distance in miles
 //    var postTypeFilter by remember { mutableStateOf<PostType?>(null) } // No filter by default
     val userLocation = "Boston, MA" // Change later, to see user's location
 
-    val filteredPosts = posts   // change to mutable list?
+    val filteredPosts = postSearchResults   // change to mutable list?
     // Post Type Filter with Radio Buttons
     val postTypeOptions = listOf("All", "Request", "Offer")
     var selectedOption by remember { mutableStateOf("All") }
@@ -144,7 +137,7 @@ fun SearchScreen(modifier: Modifier = Modifier, posts: List<Post>, viewModel: Ma
                 }
             } else {
                 filteredPosts.forEach { post ->
-                    item {PostItem( post = post, onPostClicked) }
+                    item {PostItem( postSearchResult = post, onPostClicked) }
                 }
             }
         }
@@ -154,23 +147,23 @@ fun SearchScreen(modifier: Modifier = Modifier, posts: List<Post>, viewModel: Ma
 
 
 @Composable
-fun PostItem(post: Post, onPostClicked: (String) -> Unit) {
+fun PostItem(postSearchResult: PostSearchResult, onPostClicked: (String) -> Unit) {
     // Display post details
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable { onPostClicked(post.postId) },
+            .clickable { onPostClicked(postSearchResult.postId) },
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = post.title,
+                text = postSearchResult.title,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
-                text = "Distance: ${post.distance}",
+                text = "Distance: ${postSearchResult.distance}",
                 style = MaterialTheme.typography.bodyMedium
             )
         }

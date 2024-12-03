@@ -1,6 +1,7 @@
 package com.example.mutualaid_finalproject
 
 import android.app.Application
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -46,10 +47,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mutualaid_finalproject.model.MainViewModel
-import com.example.mutualaid_finalproject.model.Profile
+import com.example.mutualaid_finalproject.model.Post
 import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
 import com.example.mutualaid_finalproject.ui.NewPostScreen
-import com.example.mutualaid_finalproject.ui.Post
+import com.example.mutualaid_finalproject.ui.PostSearchResult
 import com.example.mutualaid_finalproject.ui.PostType
 import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
@@ -57,6 +58,7 @@ import com.example.mutualaid_finalproject.ui.SettingsScreen
 import com.example.mutualaid_finalproject.ui.SignInScreen
 import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -67,6 +69,10 @@ import retrofit2.http.Query
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.util.Date
+import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
@@ -143,85 +149,85 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin: (String, String) -> Unit, onSignup: (String, String) -> Unit) { // Outermost composable where probably all/most of the UI logic can go
-    val posts = listOf(
-        Post(
+    val postSearchResults = listOf(
+        PostSearchResult(
             postId = "123",
             type = PostType.REQUEST,
             isAccepted = false,
             title = "Math Tutor",
             location = "Boston, MA"
         ),
-        Post(
+        PostSearchResult(
             postId = "124",
             type = PostType.OFFER,
             isAccepted = true,
             title = "Grocery Delivery",
             location = "Philadelphia, PA"
         ),
-        Post(
+        PostSearchResult(
             postId = "125",
             type = PostType.REQUEST,
             isAccepted = false,
             title = "Dog Walker Needed",
             location = "New York, NY"
         ),
-        Post(
+        PostSearchResult(
             postId = "123",
             type = PostType.REQUEST,
             isAccepted = false,
             title = "Math Tutor",
             location = "Boston, MA"
         ),
-        Post(
+        PostSearchResult(
             postId = "124",
             type = PostType.OFFER,
             isAccepted = true,
             title = "Grocery Delivery",
             location = "Philadelphia, PA"
         ),
-        Post(
+        PostSearchResult(
             postId = "125",
             type = PostType.REQUEST,
             isAccepted = false,
             title = "Dog Walker Needed",
             location = "New York, NY"
         ),
-        Post(
+        PostSearchResult(
             postId = "123",
             type = PostType.REQUEST,
             isAccepted = false,
             title = "Math Tutor",
             location = "Boston, MA"
         ),
-        Post(
+        PostSearchResult(
             postId = "124",
             type = PostType.OFFER,
             isAccepted = true,
             title = "Grocery Delivery",
             location = "Philadelphia, PA"
         ),
-        Post(
+        PostSearchResult(
             postId = "125",
             type = PostType.REQUEST,
             isAccepted = false,
             title = "Dog Walker Needed",
             location = "New York, NY"
         ),
-        Post(
+        PostSearchResult(
             postId = "123",
             type = PostType.REQUEST,
             isAccepted = false,
             title = "Math Tutor",
             location = "Boston, MA"
         ),
-        Post(
+        PostSearchResult(
             postId = "124",
             type = PostType.OFFER,
             isAccepted = true,
             title = "Grocery Delivery",
             location = "Philadelphia, PA"
         ),
-        Post(
+        PostSearchResult(
             postId = "125",
             type = PostType.REQUEST,
             isAccepted = false,
@@ -323,10 +329,34 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                 )
 
                 1 -> NewPostScreen(
-                    postFunction = { _, _, _, _, _, _, _, _, _, _, _ -> },
+                    postFunction = { type: String,
+                                     username: String,
+                                     title: String,
+                                     description: String,
+                                     imageUri: Uri?,
+                                     location: String?,
+                                     datePosted: String,
+                                     dateLatest: String,
+                                     tags: String ->
+                        val dateFormat = SimpleDateFormat("yyyy-mm-dd", Locale.US)
+                        if (currentUser != null) {
+                            val newPost = Post(
+                                pid=java.util.UUID.randomUUID().toString(),
+                                accepted=false,
+                                date_expires=Timestamp(dateFormat.parse(dateLatest) ?: Date()),
+                                date_posted=Timestamp(dateFormat.parse(datePosted) ?: Date()),
+                                description=description,
+                                location=location ?: "",
+                                title=title,
+                                type=if (type=="request") "request" else "offer",
+                                uid=currentUser!!.uid
+                            )
+                            viewModel.postRepository.set(newPost, {})
+                        }
+                    },
                     username = currentUser?.uid ?: ""
                 )
-                2 -> SearchScreen(modifier = Modifier, posts, viewModel, onSearch = {_,_,_->}, onPostClicked = {_ ->})
+                2 -> SearchScreen(modifier = Modifier, postSearchResults, viewModel, onSearch = { _, _, _->}, onPostClicked = { _ ->})
                 3 -> SettingsScreen(logout={
                     viewModel.logout()
                 })
