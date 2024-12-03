@@ -197,7 +197,19 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                     description="I'm a cool guy!",
                     skills=listOf("sewing", "editing"),
                     resources=listOf("clothes", "food"),
-                    availability=listOf(Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false), Time(false, false, false))
+                    onNameChange={},
+                    onDescriptionChange={},
+                    addSkill={},
+                    addResource={},
+                    changeAvailability={_, _ ->},
+                    availability=listOf(
+                        Time(false, false, false),
+                        Time(false, false, false),
+                        Time(false, false, false),
+                        Time(false, false, false),
+                        Time(false, false, false),
+                        Time(false, false, false),
+                        Time(false, false, false))
                 )
                 1 -> NewPostScreen(postFunction={})
                 2 -> SearchScreen()
