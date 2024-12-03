@@ -47,6 +47,11 @@ class MainViewModel(application: Application) : ViewModel() {
         }
     }
 
+    fun logout() {
+        profileRepository = ProfileRepository()
+        currentUser.value = null
+    }
+
     fun handleSignUp(email: String, password: String, mainActivity: Activity) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(mainActivity) { task ->
