@@ -47,20 +47,26 @@ fun SignInScreen(
         Spacer(modifier = Modifier.height(16.dp))
         TextButton(
             onClick = {
-                onLogin(email, password)
+                if (email != "" && password != "") {
+                    onLogin(email, password)
+                }
                 email = ""
                 password = ""
             },
+            enabled=(email != "" && password != ""),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Login")
         }
         TextButton(
             onClick = {
-                onSignup(email, password)
+                if (email != "" && password != "") {
+                    onSignup(email, password)
+                }
                 email = ""
                 password = ""
             },
+            enabled=(email != "" && password != ""),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Signup")
