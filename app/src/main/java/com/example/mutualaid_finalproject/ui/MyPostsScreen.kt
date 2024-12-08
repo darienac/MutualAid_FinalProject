@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -26,11 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.mutualaid_finalproject.model.Post
 
 @Composable
 fun MyPostsScreen(
     modifier: Modifier = Modifier,
     uid: String,
+    posts: List<Post>,
     onNewPost: (
         type: String,
         username: String,
@@ -72,6 +75,23 @@ fun MyPostsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                 )
+                Spacer(modifier=Modifier.height(16.dp))
+            }
+            items(
+                count=posts.size
+            ) { index->
+                PostItem(
+                    PostSearchResult(
+                        postId=posts[index].pid,
+                        type=if (posts[index].type == "request") PostType.REQUEST else PostType.OFFER,
+                        isAccepted=posts[index].accepted,
+                        title=posts[index].title,
+                        location=posts[index].location,
+                        distance=""
+                    )
+                ) {
+
+                }
             }
         }
     }
@@ -81,6 +101,6 @@ fun MyPostsScreen(
 @Composable
 fun MyPostsPreview() {
     Box(modifier=Modifier.fillMaxSize()) {
-        MyPostsScreen(modifier=Modifier, "", {_,_,_,_,_,_,_,_,_->})
+        MyPostsScreen(modifier=Modifier, "", emptyList(), {_,_,_,_,_,_,_,_,_->})
     }
 }

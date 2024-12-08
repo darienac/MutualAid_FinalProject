@@ -3,21 +3,21 @@ package com.example.mutualaid_finalproject.model
 import com.example.mutualaid_finalproject.model.firestore.RemotePostsDao
 import com.example.mutualaid_finalproject.model.firestore.RemoteProfilesDao
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.flow.map
 
-class PostRepository {
-    private var remotePostsDao = RemotePostsDao("NO_POST")
+class PostRepository(private val uid: String = "NO_USER") {
+    private var remotePostsDao = RemotePostsDao("NO_POST", uid)
 
     var currentPost = remotePostsDao.getCurrentPostFlow().map {
-            value: DocumentSnapshot? -> remotePostsDao.toPost(value)
+        value: DocumentSnapshot? -> remotePostsDao.toPost(value)
+    }
+    var currentUserPosts = remotePostsDao.getCurrentUserPostsFlow().map {
+        value: QuerySnapshot? -> remotePostsDao.toPosts(value)
     }
 
     fun setListeningPost(pid: String = "NO_POST") {
-        remotePostsDao.close()
-        remotePostsDao = RemotePostsDao(pid)
-        currentPost = remotePostsDao.getCurrentPostFlow().map {
-                value: DocumentSnapshot? -> remotePostsDao.toPost(value)
-        }
+        remotePostsDao.setCurrentPost(pid)
     }
 
     fun get(pid: String, onResult:(Post?)->Unit) {

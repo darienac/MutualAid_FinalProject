@@ -179,6 +179,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
     var selectedItem by remember {mutableIntStateOf(0)}
     val currentUser by viewModel.currentUser.observeAsState()
     val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
+    val currentUserPosts by viewModel.postRepository.currentUserPosts.collectAsState(emptyList())
 
     if (currentUser == null || currentProfile == null) {
         Scaffold(
@@ -291,7 +292,8 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                             viewModel.postRepository.set(newPost, {})
                         }
                     },
-                    uid = currentUser?.uid ?: ""
+                    uid = currentUser?.uid ?: "",
+                    posts = currentUserPosts
                 )
                 2 -> SearchScreen(modifier = Modifier, postSearchResults, onSearch = {query, maxDistance, selectedOption ->
                     viewModel.postRepository.search(query) {posts->

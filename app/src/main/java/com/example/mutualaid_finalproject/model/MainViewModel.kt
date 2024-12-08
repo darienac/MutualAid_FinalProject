@@ -35,6 +35,7 @@ class MainViewModel(application: Application) : ViewModel() {
     private fun updateCurrentUser(user: FirebaseUser?) {
         if (user?.uid == null) {
             profileRepository = ProfileRepository()
+            postRepository = PostRepository()
             currentUser.value = null
         } else {
             profileRepository = ProfileRepository(user.uid) {
@@ -44,6 +45,7 @@ class MainViewModel(application: Application) : ViewModel() {
                     emailVerified=user.isEmailVerified
                 )
             }
+            postRepository = PostRepository(user.uid)
         }
     }
 

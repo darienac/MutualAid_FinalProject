@@ -159,10 +159,12 @@ fun PostItem(postSearchResult: PostSearchResult, onPostClicked: (String) -> Unit
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            Text(
-                text = "Distance: ${postSearchResult.distance}",
-                style = MaterialTheme.typography.bodyMedium
-            )
+            if (postSearchResult.distance != "") {
+                Text(
+                    text = "Distance: ${postSearchResult.distance}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }
