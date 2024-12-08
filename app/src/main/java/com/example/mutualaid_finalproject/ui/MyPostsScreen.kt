@@ -21,7 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -46,8 +46,8 @@ fun MyPostsScreen(
         tags: String
     ) -> Unit
 ) {
-    var newPostScreenOpen by remember{mutableStateOf(false)}
-    var postSelected by remember{mutableStateOf<String?>(null)}
+    var newPostScreenOpen by rememberSaveable{mutableStateOf(false)}
+    var postSelected by rememberSaveable{mutableStateOf<String?>(null)}
     if (newPostScreenOpen) {
         InnerScreen(title="New Post", onClose={newPostScreenOpen=false}) {
             NewPostScreen(modifier, uid) {type,username,title,description,imageUri,location,datePosted,dateLatest,tags->
