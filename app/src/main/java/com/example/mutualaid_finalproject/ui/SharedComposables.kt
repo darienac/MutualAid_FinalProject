@@ -3,21 +3,31 @@ package com.example.mutualaid_finalproject.ui
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +40,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -132,7 +143,55 @@ fun MeetingAddressCard(
     }
 }
 
-@Preview(showBackground = true)
+@Composable
+fun PostItem(postSearchResult: PostSearchResult, onPostClicked: (String) -> Unit) {
+    // Display post details
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable { onPostClicked(postSearchResult.postId) },
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = postSearchResult.title,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Distance: ${postSearchResult.distance}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InnerScreen(title: String="", onClose: ()->Unit, content: @Composable ()->Unit) { // Container for a Composable app screen with an X button and title at top
+    Column {
+        CenterAlignedTopAppBar(
+            windowInsets=WindowInsets(0.dp),
+            title={
+                Text(title, maxLines=1, overflow=TextOverflow.Ellipsis)
+            },
+            navigationIcon={
+                IconButton(onClick=onClose) {
+                    Icon(imageVector=Icons.AutoMirrored.Filled.ArrowBack,contentDescription="Previous Screen")
+                }
+            },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor = MaterialTheme.colorScheme.primary,
+            )
+        )
+        Box(modifier=Modifier.weight(1f)) {
+            content()
+        }
+    }
+}
+
 @Composable
 fun GreetingPreview() {
 //    LocationInput(onSearch = { query ->

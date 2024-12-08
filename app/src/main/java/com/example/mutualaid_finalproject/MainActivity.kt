@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AddCircle
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.model.Post
 import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
+import com.example.mutualaid_finalproject.ui.MyPostsScreen
 import com.example.mutualaid_finalproject.ui.NewPostScreen
 import com.example.mutualaid_finalproject.ui.PostSearchResult
 import com.example.mutualaid_finalproject.ui.PostType
@@ -202,8 +204,8 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                 NavigationBarItem(
                     selected = selectedItem == 1,
                     onClick = {selectedItem = 1},
-                    icon = {Icon(Icons.Outlined.AddCircle, "New Post")},
-                    label = {Text("New Post")}
+                    icon = {Icon(Icons.Outlined.Info, "New Post")},
+                    label = {Text("My Posts")}
                 )
                 NavigationBarItem(
                     selected = selectedItem == 2,
@@ -263,8 +265,8 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                     }
                 )
 
-                1 -> NewPostScreen(
-                    postFunction = { type: String,
+                1 -> MyPostsScreen(
+                    onNewPost = { type: String,
                                      username: String,
                                      title: String,
                                      description: String,
@@ -289,7 +291,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                             viewModel.postRepository.set(newPost, {})
                         }
                     },
-                    username = currentUser?.uid ?: ""
+                    uid = currentUser?.uid ?: ""
                 )
                 2 -> SearchScreen(modifier = Modifier, postSearchResults, onSearch = {query, maxDistance, selectedOption ->
                     viewModel.postRepository.search(query) {posts->
