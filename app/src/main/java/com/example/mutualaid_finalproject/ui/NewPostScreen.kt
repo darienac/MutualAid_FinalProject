@@ -1,24 +1,35 @@
-package com.example.mutualaid_finalproject.ui
-
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.rememberAsyncImagePainter
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewPostScreen(
     modifier: Modifier = Modifier,
@@ -35,14 +46,15 @@ fun NewPostScreen(
         tags: String
     ) -> Unit
 ) {
-    var type by remember { mutableStateOf("") }
+    var type by remember { mutableStateOf("Offer/Request") }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
-    var datePosted by remember { mutableStateOf("") }
-    var dateLatest by remember { mutableStateOf("") }
     var tags by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var expanded by remember { mutableStateOf(false)}
+    var selectedDate by remember { mutableStateOf<Long?>(null) }
+    var showModal by remember { mutableStateOf(false) }
 
     // Image Picker Launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -72,14 +84,55 @@ fun NewPostScreen(
             label = { Text("Title") },
             modifier = Modifier.fillMaxWidth()
         )
-
-        OutlinedTextField(
-            value = type,
-            onValueChange = { type = it },
-            label = { Text("Type (request or offer)") },
-            placeholder = { Text("Enter 'request' or 'offer'") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+        ) {
+            OutlinedTextField(
+                value = type,
+                onValueChange = { /* Read-only field */ },
+                label = { Text("Post Type") },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Request") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.DateRange, // Replace with a relevant icon
+                            contentDescription = "Request Icon"
+                        )
+                    },
+                    onClick = {
+                        type = "Request"
+                        expanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Offer") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.DateRange, // Replace with a relevant icon
+                            contentDescription = "Offer Icon"
+                        )
+                    },
+                    onClick = {
+                        type = "Offer"
+                        expanded = false
+                    }
+                )
+            }
+        }
 
         OutlinedTextField(
             value = description,
@@ -120,20 +173,32 @@ fun NewPostScreen(
         )
 
         OutlinedTextField(
-            value = datePosted,
-            onValueChange = { datePosted = it },
-            label = { Text("Date Posted") },
-            placeholder = { Text("e.g., 2024-11-18") },
-            modifier = Modifier.fillMaxWidth()
+            value = selectedDate?.let { convertMillisToDate(it) } ?: "",
+            onValueChange = { },
+            label = { Text("Expiration") },
+            placeholder = { Text("MM/DD/YYYY") },
+            trailingIcon = {
+                Icon(Icons.Default.DateRange, contentDescription = "Select date")
+            },
+            modifier = modifier
+                .fillMaxWidth()
+                .pointerInput(selectedDate) {
+                    awaitEachGesture {
+                        awaitFirstDown(pass = PointerEventPass.Initial)
+                        val upEvent = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                        if (upEvent != null) {
+                            showModal = true
+                        }
+                    }
+                }
         )
 
-        OutlinedTextField(
-            value = dateLatest,
-            onValueChange = { dateLatest = it },
-            label = { Text("Date Latest") },
-            placeholder = { Text("e.g., 2024-11-18") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        if (showModal) {
+            DatePickerModal(
+                onDateSelected = { selectedDate = it },
+                onDismiss = { showModal = false }
+            )
+        }
 
         OutlinedTextField(
             value = tags,
@@ -145,6 +210,9 @@ fun NewPostScreen(
 
         Button(
             onClick = {
+                val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm")
+                val current = LocalDateTime.now().format(formatter)
+                val latest = convertMillisToDate(selectedDate!!).format(formatter)
                 postFunction(
                     type,
                     username,
@@ -152,16 +220,15 @@ fun NewPostScreen(
                     description,
                     imageUri,
                     if (location.isNotBlank()) location else null,
-                    datePosted,
-                    dateLatest,
+                    current,
+                    latest,
                     tags
                 )
                 type = ""
                 title = ""
                 description = ""
                 location = ""
-                datePosted = ""
-                dateLatest = ""
+                selectedDate = null
                 tags = ""
                 imageUri = null
             },
@@ -170,6 +237,39 @@ fun NewPostScreen(
         ) {
             Text(text = "Create Post")
         }
+    }
+}
+
+fun convertMillisToDate(millis: Long): String {
+    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    return formatter.format(Date(millis))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerModal(
+    onDateSelected: (Long?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState()
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onDateSelected(datePickerState.selectedDateMillis)
+                onDismiss()
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
     }
 }
 
