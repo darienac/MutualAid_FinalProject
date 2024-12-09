@@ -8,6 +8,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AddCircle
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -47,9 +50,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavOptions
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.model.Post
 import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
+import com.example.mutualaid_finalproject.ui.MyPostsScreen
 import com.example.mutualaid_finalproject.ui.NewPostScreen
 import com.example.mutualaid_finalproject.ui.PostSearchResult
 import com.example.mutualaid_finalproject.ui.PostType
@@ -148,35 +157,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+val ANIMATION_DURATION = 200
+
 @Composable
 fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin: (String, String) -> Unit, onSignup: (String, String) -> Unit) { // Outermost composable where probably all/most of the UI logic can go
-//    val postSearchResults = listOf(
-//        PostSearchResult(
-//            postId = "123",
-//            type = PostType.REQUEST,
-//            isAccepted = false,
-//            title = "Math Tutor",
-//            location = "Boston, MA"
-//        ),
-//        PostSearchResult(
-//            postId = "124",
-//            type = PostType.OFFER,
-//            isAccepted = true,
-//            title = "Grocery Delivery",
-//            location = "Philadelphia, PA"
-//        ),
-//        PostSearchResult(
-//            postId = "125",
-//            type = PostType.REQUEST,
-//            isAccepted = false,
-//            title = "Dog Walker Needed",
-//            location = "New York, NY"
-//        )
-//    )
+    var navController = rememberNavController()
+    var navEntry = navController.currentBackStackEntryAsState()
     var postSearchResults = remember {mutableStateListOf<PostSearchResult>()}
-    var selectedItem by remember {mutableIntStateOf(0)}
     val currentUser by viewModel.currentUser.observeAsState()
     val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
+    val currentUserPosts by viewModel.postRepository.currentUserPosts.collectAsState(emptyList())
 
     if (currentUser == null || currentProfile == null) {
         Scaffold(
@@ -194,26 +184,26 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
         bottomBar = {
             NavigationBar() {
                 NavigationBarItem(
-                    selected = selectedItem == 0,
-                    onClick = {selectedItem = 0},
+                    selected = navEntry.value?.destination?.route == "ProfileNav",
+                    onClick = {navController.navigate("ProfileNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Filled.AccountCircle, "Profile")},
                     label = {Text("Profile")}
                 )
                 NavigationBarItem(
-                    selected = selectedItem == 1,
-                    onClick = {selectedItem = 1},
-                    icon = {Icon(Icons.Outlined.AddCircle, "New Post")},
-                    label = {Text("New Post")}
+                    selected = navEntry.value?.destination?.route == "MyPostsNav",
+                    onClick = {navController.navigate("MyPostsNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
+                    icon = {Icon(Icons.Outlined.Info, "My Posts")},
+                    label = {Text("My Posts")}
                 )
                 NavigationBarItem(
-                    selected = selectedItem == 2,
-                    onClick = {selectedItem = 2},
+                    selected = navEntry.value?.destination?.route == "SearchNav",
+                    onClick = {navController.navigate("SearchNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Filled.Search, "Search")},
                     label = {Text("Search")}
                 )
                 NavigationBarItem(
-                    selected = selectedItem == 3,
-                    onClick = {selectedItem = 3},
+                    selected = navEntry.value?.destination?.route == "SettingsNav",
+                    onClick = {navController.navigate("SettingsNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Filled.Settings, "Settings")},
                     label = {Text("Settings")}
                 )
@@ -221,112 +211,227 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
         }
     ) { innerPadding ->
         Box(modifier=Modifier.fillMaxSize().padding(innerPadding)) {
-            when (selectedItem) {
-                0 -> ProfileScreen(
-                    modifier=Modifier,
-                    username=currentUser?.email ?: "",
-                    name=currentProfile?.name ?: "",
-                    description="Not yet in database schema",
-                    skills=currentProfile?.skills ?: listOf(),
-                    resources=currentProfile?.resources ?: listOf(),
-                    availability=currentProfile?.daysAvailable ?: listOf(
-                        ProfileTimeAvailability(false, false, false),
-                        ProfileTimeAvailability(false, false, false),
-                        ProfileTimeAvailability(false, false, false),
-                        ProfileTimeAvailability(false, false, false),
-                        ProfileTimeAvailability(false, false, false),
-                        ProfileTimeAvailability(false, false, false),
-                        ProfileTimeAvailability(false, false, false)),
-                    onNameChange={ name->
-                        currentProfile?.copy(name=name)?.let { viewModel.profileRepository.set(it, {}) }
+            NavHost(
+                navController=navController,
+                startDestination = "ProfileNav"
+            ) {
+                composable(
+                    "ProfileNav",
+                    enterTransition={
+                        when(initialState.destination.route) {
+                            "MyPostsNav", "SearchNav", "SettingsNav" ->
+                                slideIntoContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
+                            else ->
+                                slideIntoContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
+                        }
                     },
-                    onDescriptionChange={},
-                    addSkill={ skill->
-                        currentProfile?.copy(skills=currentProfile?.skills?.plus(skill) ?: listOf(skill))?.let { viewModel.profileRepository.set(it, {}) }
-                    },
-                    addResource={ resource->
-                        currentProfile?.copy(resources=currentProfile?.resources?.plus(resource) ?: listOf(resource))?.let { viewModel.profileRepository.set(it, {}) }
-                    },
-                    changeAvailability={ index, time ->
-                        var newAvailability = currentProfile?.daysAvailable?.toMutableList()
-                        if (newAvailability != null) {
-                            if (time == "Morning") {
-                                newAvailability[index] = newAvailability[index].copy(morning=!newAvailability[index].morning)
-                            } else if (time == "Afternoon") {
-                                newAvailability[index] = newAvailability[index].copy(afternoon=!newAvailability[index].afternoon)
-                            } else if (time == "Evening") {
-                                newAvailability[index] = newAvailability[index].copy(evening=!newAvailability[index].evening)
-                            }
-
-                            currentProfile?.copy(daysAvailable = newAvailability)?.let { viewModel.profileRepository.set(it, {}) }
+                    exitTransition={
+                        when(targetState.destination.route) {
+                            "MyPostsNav", "SearchNav", "SettingsNav" ->
+                                slideOutOfContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
+                            else ->
+                                slideOutOfContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
                         }
                     }
-                )
+                ) {
+                    ProfileScreen(
+                        modifier=Modifier,
+                        username=currentUser?.email ?: "",
+                        name=currentProfile?.name ?: "",
+                        description="Not yet in database schema",
+                        skills=currentProfile?.skills ?: listOf(),
+                        resources=currentProfile?.resources ?: listOf(),
+                        availability=currentProfile?.daysAvailable ?: listOf(
+                            ProfileTimeAvailability(false, false, false),
+                            ProfileTimeAvailability(false, false, false),
+                            ProfileTimeAvailability(false, false, false),
+                            ProfileTimeAvailability(false, false, false),
+                            ProfileTimeAvailability(false, false, false),
+                            ProfileTimeAvailability(false, false, false),
+                            ProfileTimeAvailability(false, false, false)),
+                        onNameChange={ name->
+                            currentProfile?.copy(name=name)?.let { viewModel.profileRepository.set(it, {}) }
+                        },
+                        onDescriptionChange={},
+                        addSkill={ skill->
+                            currentProfile?.copy(skills=currentProfile?.skills?.plus(skill) ?: listOf(skill))?.let { viewModel.profileRepository.set(it, {}) }
+                        },
+                        addResource={ resource->
+                            currentProfile?.copy(resources=currentProfile?.resources?.plus(resource) ?: listOf(resource))?.let { viewModel.profileRepository.set(it, {}) }
+                        },
+                        changeAvailability={ index, time ->
+                            var newAvailability = currentProfile?.daysAvailable?.toMutableList()
+                            if (newAvailability != null) {
+                                if (time == "Morning") {
+                                    newAvailability[index] = newAvailability[index].copy(morning=!newAvailability[index].morning)
+                                } else if (time == "Afternoon") {
+                                    newAvailability[index] = newAvailability[index].copy(afternoon=!newAvailability[index].afternoon)
+                                } else if (time == "Evening") {
+                                    newAvailability[index] = newAvailability[index].copy(evening=!newAvailability[index].evening)
+                                }
 
-                1 -> NewPostScreen(
-                    postFunction = { type: String,
-                                     username: String,
-                                     title: String,
-                                     description: String,
-                                     imageUri: Uri?,
-                                     location: String?,
-                                     datePosted: String,
-                                     dateLatest: String,
-                                     tags: String ->
-                        val dateFormat = SimpleDateFormat("yyyy-mm-dd", Locale.US)
-                        if (currentUser != null) {
-                            val newPost = Post(
-                                pid=java.util.UUID.randomUUID().toString(),
-                                accepted=false,
-                                date_expires=Timestamp(dateFormat.parse(dateLatest) ?: Date()),
-                                date_posted=Timestamp(dateFormat.parse(datePosted) ?: Date()),
-                                description=description,
-                                location=location ?: "",
-                                title=title,
-                                type=if (type=="request") "request" else "offer",
-                                uid=currentUser!!.uid
-                            )
-                            viewModel.postRepository.set(newPost, {})
+                                currentProfile?.copy(daysAvailable = newAvailability)?.let { viewModel.profileRepository.set(it, {}) }
+                            }
+                        }
+                    )
+                }
+                composable(
+                    "MyPostsNav",
+                    enterTransition={
+                        when(initialState.destination.route) {
+                            "SearchNav", "SettingsNav" ->
+                                slideIntoContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
+                            else ->
+                                slideIntoContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
                         }
                     },
-                    username = currentUser?.uid ?: ""
-                )
-                2 -> SearchScreen(modifier = Modifier, postSearchResults, onSearch = {query, maxDistance, selectedOption ->
-                    viewModel.postRepository.search(query) {posts->
-                        var newPostSearchResults = mutableListOf<PostSearchResult>() // Set all at once to avoid unnecessary recompositions
-                        for (post in posts) {
-                            newPostSearchResults.add(PostSearchResult(
-                                postId=post.pid,
-                                type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
-                                isAccepted=post.accepted,
-                                title=post.title,
-                                location=post.location,
-                                distance="Unknown"
-                            ))
+                    exitTransition={
+                        when(targetState.destination.route) {
+                            "SearchNav", "SettingsNav" ->
+                                slideOutOfContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
+                            else ->
+                                slideOutOfContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
                         }
-                        postSearchResults.clear()
-                        postSearchResults.addAll(newPostSearchResults)
-                        Log.d("SearchScreen", "updating with posts (${posts.size})")
-                        for (postSearchResult in postSearchResults) {
-                            if (postSearchResult.location == "") {
-                                continue
+                    }
+                ) {
+                    MyPostsScreen(
+                        onNewPost = { type: String,
+                                      username: String,
+                                      title: String,
+                                      description: String,
+                                      imageUri: Uri?,
+                                      location: String?,
+                                      datePosted: String,
+                                      dateLatest: String,
+                                      tags: String ->
+                            val dateFormat = SimpleDateFormat("yyyy-mm-dd", Locale.US)
+                            if (currentUser != null) {
+                                val newPost = Post(
+                                    pid=java.util.UUID.randomUUID().toString(),
+                                    accepted=false,
+                                    date_expires=Timestamp(dateFormat.parse(dateLatest) ?: Date()),
+                                    date_posted=Timestamp(dateFormat.parse(datePosted) ?: Date()),
+                                    description=description,
+                                    location=location ?: "",
+                                    title=title,
+                                    type=if (type=="request") "request" else "offer",
+                                    uid=currentUser!!.uid
+                                )
+                                viewModel.postRepository.set(newPost, {})
                             }
-                            viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
-                                Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
-                                for (i in 0..postSearchResults.size-1) {
-                                    if (postSearchResults[i].postId == pid) {
-                                        postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
+                        },
+                        uid = currentUser?.uid ?: "",
+                        posts = currentUserPosts
+                    )
+                }
+                composable(
+                    "SearchNav",
+                    enterTransition={
+                        when(initialState.destination.route) {
+                            "SettingsNav" ->
+                                slideIntoContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
+                            else ->
+                                slideIntoContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
+                        }
+                    },
+                    exitTransition={
+                        when(targetState.destination.route) {
+                            "SettingsNav" ->
+                                slideOutOfContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Left,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
+                            else ->
+                                slideOutOfContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Right,
+                                    animationSpec=tween(ANIMATION_DURATION)
+                                )
+                        }
+                    }
+                ) {
+                    SearchScreen(modifier = Modifier, postSearchResults, onSearch = {query, maxDistance, selectedOption ->
+                        viewModel.postRepository.search(query) {posts->
+                            var newPostSearchResults = mutableListOf<PostSearchResult>() // Set all at once to avoid unnecessary recompositions
+                            for (post in posts) {
+                                newPostSearchResults.add(PostSearchResult(
+                                    postId=post.pid,
+                                    type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
+                                    isAccepted=post.accepted,
+                                    title=post.title,
+                                    location=post.location,
+                                    distance="Unknown"
+                                ))
+                            }
+                            postSearchResults.clear()
+                            postSearchResults.addAll(newPostSearchResults)
+                            Log.d("SearchScreen", "updating with posts (${posts.size})")
+                            for (postSearchResult in postSearchResults) {
+                                if (postSearchResult.location == "") {
+                                    continue
+                                }
+                                viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
+                                    Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+                                    for (i in 0..postSearchResults.size-1) {
+                                        if (postSearchResults[i].postId == pid) {
+                                            postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
+                                        }
                                     }
                                 }
                             }
                         }
+                    }, onPostClicked = {pid ->
+                        Log.d("SearchScreen", "pid: $pid")
+                    })
+                }
+                composable(
+                    "SettingsNav",
+                    enterTransition={
+                        slideIntoContainer(
+                            AnimatedContentTransitionScope.SlideDirection.Left,
+                            animationSpec=tween(ANIMATION_DURATION)
+                        )
+                    },
+                    exitTransition={
+                        slideOutOfContainer(
+                            AnimatedContentTransitionScope.SlideDirection.Right,
+                            animationSpec=tween(ANIMATION_DURATION)
+                        )
                     }
-                }, onPostClicked = {pid ->
-                    Log.d("SearchScreen", "pid: $pid")
-                })
-                3 -> SettingsScreen(logout={
-                    viewModel.logout()
-                })
+                ) {
+                    SettingsScreen(logout={
+                        viewModel.logout()
+                    })
+                }
             }
         }
     }
@@ -336,94 +441,5 @@ class MainViewModelFactory(private val application: Application) :
     ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return MainViewModel(application) as T
-    }
-}
-
-// Define the endpoints and parameters for the Google Maps Distance Matrix API.
-interface DistanceMatrixService {
-    @GET("distancematrix/json")
-    suspend fun getDistance(
-        @Query("origins") origins: String,
-        @Query("destinations") destinations: String,
-        @Query("mode") mode: String = "driving",
-        @Query("key") apiKey: String,
-        @Query("units") units: String = "imperial"    // Units: 'imperial' for miles, 'metric' for km
-    ): DistanceMatrixResponse
-}
-
-// Define data classes to model the response from the API.
-data class DistanceMatrixResponse(
-    val rows: List<Row>
-)
-
-data class Row(
-    val elements: List<Element>
-)
-
-data class Element(
-    val distance: Distance,
-    val duration: Duration,
-    val status: String
-)
-
-data class Distance(val text: String, val value: Int)
-data class Duration(val text: String, val value: Int)
-
-@Composable
-fun DistanceCalculator(apiKey: String) {
-    var origin by remember { mutableStateOf("") }
-    var destination by remember { mutableStateOf("") }
-    var distance by remember { mutableStateOf<String?>(null) }
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        OutlinedTextField(
-            value = origin,
-            onValueChange = { origin = it },
-            label = { Text("Enter Origin") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = destination,
-            onValueChange = { destination = it },
-            label = { Text("Enter Destination") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Button(
-            onClick = {
-                // Use the Retrofit interface to make API calls.
-                // Call API to calculate distance
-                CoroutineScope(Dispatchers.IO).launch {
-                    val moshi = Moshi.Builder()
-                        .add(KotlinJsonAdapterFactory())
-                        .build()
-
-                    val service = Retrofit.Builder()
-                        .baseUrl("https://maps.googleapis.com/maps/api/")
-                        .addConverterFactory(MoshiConverterFactory.create(moshi))
-                        .build()
-                        .create(DistanceMatrixService::class.java)
-
-                    val response = service.getDistance(
-                        origins = origin,
-                        destinations = destination,
-                        apiKey = apiKey
-                    )
-
-                    distance = response.rows.firstOrNull()
-                        ?.elements?.firstOrNull()
-                        ?.distance?.text
-                }
-            },
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("Calculate Distance")
-        }
-        distance?.let {
-            Text(
-                text = "Distance: $it",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-        }
     }
 }
