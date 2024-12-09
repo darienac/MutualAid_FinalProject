@@ -1,5 +1,6 @@
 package com.example.mutualaid_finalproject
 
+import NewPostScreen
 import android.app.Application
 import android.net.Uri
 import android.os.Bundle
@@ -50,7 +51,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.model.Post
 import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
-import com.example.mutualaid_finalproject.ui.NewPostScreen
 import com.example.mutualaid_finalproject.ui.PostSearchResult
 import com.example.mutualaid_finalproject.ui.PostType
 import com.example.mutualaid_finalproject.ui.ProfileScreen
@@ -59,7 +59,9 @@ import com.example.mutualaid_finalproject.ui.SettingsScreen
 import com.example.mutualaid_finalproject.ui.SignInScreen
 import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -274,6 +276,32 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                      dateLatest: String,
                                      tags: String ->
                         val dateFormat = SimpleDateFormat("yyyy-mm-dd", Locale.US)
+                        var downloadUri: Uri? = null
+                        if (imageUri != null) {
+                            val storage = Firebase.storage
+                            val storageRef = storage.reference
+                            val imageRef = storageRef.child("images/${imageUri.lastPathSegment}")
+                            var uploadTask = imageRef.putFile(imageUri)
+                            uploadTask.addOnFailureListener {
+                                // Handle unsuccessful uploads
+                            }.addOnSuccessListener { taskSnapshot ->
+                                // taskSnapshot.metadata contains file metadata such as size, content-type, etc.
+                            }
+                            val urlTask = uploadTask.continueWithTask { task ->
+                                if (!task.isSuccessful) {
+                                    task.exception?.let {
+                                        throw it
+                                    }
+                                }
+                                imageRef.downloadUrl
+                            }.addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    downloadUri = task.result
+                                } else {
+                                    // Handle failures
+                                }
+                            }
+                        }
                         if (currentUser != null) {
                             val newPost = Post(
                                 pid=java.util.UUID.randomUUID().toString(),
@@ -284,7 +312,8 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                 location=location ?: "",
                                 title=title,
                                 type=if (type=="request") "request" else "offer",
-                                uid=currentUser!!.uid
+                                uid=currentUser!!.uid,
+                                imageUri = downloadUri
                             )
                             viewModel.postRepository.set(newPost, {})
                         }
