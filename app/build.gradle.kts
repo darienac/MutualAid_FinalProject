@@ -90,7 +90,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
-    implementation("com.google.firebase:firebase-crashlytics")
-    implementation("com.google.firebase:firebase-analytics")
+//    implementation(libs.firebase.bom.v3370)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
 }

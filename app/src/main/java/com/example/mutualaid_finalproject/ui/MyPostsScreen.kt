@@ -1,5 +1,6 @@
 package com.example.mutualaid_finalproject.ui
 
+import NewPostScreen
 import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
