@@ -101,7 +101,7 @@ fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSear
             value = maxDistance,
             onValueChange = { maxDistance = it },
             valueRange = 0f..100f,
-            steps = 10,
+            steps = 101,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -148,30 +148,5 @@ fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSear
             }
         }
 
-    }
-}
-
-
-@Composable
-fun PostItem(postSearchResult: PostSearchResult, onPostClicked: (String) -> Unit) {
-    // Display post details
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { onPostClicked(postSearchResult.postId) },
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = postSearchResult.title,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Text(
-                text = "Distance: ${postSearchResult.distance}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
     }
 }

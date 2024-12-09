@@ -32,9 +32,16 @@ class MainViewModel(application: Application) : ViewModel() {
     var postRepository = PostRepository() // this is public so the UI controller can access this directly
     var distanceCalculator = DistanceCalculator() // return number miles
 
+    init {
+        if (auth.currentUser != null) {
+            updateCurrentUser(auth.currentUser)
+        }
+    }
+
     private fun updateCurrentUser(user: FirebaseUser?) {
         if (user?.uid == null) {
             profileRepository = ProfileRepository()
+            postRepository = PostRepository()
             currentUser.value = null
         } else {
             profileRepository = ProfileRepository(user.uid) {
@@ -44,12 +51,14 @@ class MainViewModel(application: Application) : ViewModel() {
                     emailVerified=user.isEmailVerified
                 )
             }
+            postRepository = PostRepository(user.uid)
         }
     }
 
     fun logout() {
         profileRepository = ProfileRepository()
         currentUser.value = null
+        auth.signOut()
     }
 
     fun handleSignUp(email: String, password: String, mainActivity: Activity) {
