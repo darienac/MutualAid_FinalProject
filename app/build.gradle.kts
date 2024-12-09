@@ -88,4 +88,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation (libs.androidx.core.ktx.v1101)
 }

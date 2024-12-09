@@ -1,7 +1,11 @@
 package com.example.mutualaid_finalproject
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -38,6 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPasswordOption
@@ -47,6 +53,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mutualaid_finalproject.model.DistanceMatrixResponse
 import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.model.Post
 import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
@@ -74,14 +81,38 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
+import android.content.Context
 
+//private const val CHANNEL_ID = "post_acceptance_channel"
+//private const val CHANNEL_NAME = "Post Acceptance Notifications"
+//private const val CHANNEL_DESCRIPTION = "Notifications for accepted posts"
 
 class MainActivity : ComponentActivity() {
     val credentialManager = CredentialManager.create(this)
     val coroutineScope = lifecycleScope
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
+
+
+        // Check and request notification permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val postNotificationPermission = "android.permission.POST_NOTIFICATIONS"
+            if (ContextCompat.checkSelfPermission(this, postNotificationPermission)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(postNotificationPermission),
+                    100
+                )
+            }
+        }
+
+
+
+
 
         enableEdgeToEdge()
         setContent {
@@ -177,6 +208,8 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
     var selectedItem by remember {mutableIntStateOf(0)}
     val currentUser by viewModel.currentUser.observeAsState()
     val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
+    // Get a Context for notifications
+    val context = LocalContext.current
 
     if (currentUser == null || currentProfile == null) {
         Scaffold(
@@ -321,9 +354,13 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                             }
                         }
                     }
-                }, onPostClicked = {pid ->
-                    Log.d("SearchScreen", "pid: $pid")
-                })
+                }, onPostClicked =
+
+                { viewModel.scheduleNotification(context, "Your post has been accepted!") })
+
+//                {pid ->
+//                    Log.d("SearchScreen", "pid: $pid")
+//                })
                 3 -> SettingsScreen(logout={
                     viewModel.logout()
                 })

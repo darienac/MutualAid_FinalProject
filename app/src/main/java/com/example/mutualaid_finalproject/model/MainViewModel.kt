@@ -2,6 +2,7 @@ package com.example.mutualaid_finalproject.model
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.credentials.CustomCredential
@@ -9,6 +10,9 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.PasswordCredential
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.Firebase
@@ -150,5 +154,18 @@ class MainViewModel(application: Application) : ViewModel() {
                 ).show()
             }
         }
+    }
+
+    // schedule the notification using work manager
+    fun scheduleNotification(context: Context, message: String) {
+        val data = Data.Builder()
+            .putString("message", message)
+            .build()
+
+        val notificationWork = OneTimeWorkRequestBuilder<NotificationWorker>()
+            .setInputData(data)
+            .build()
+
+        WorkManager.getInstance(context).enqueue(notificationWork)
     }
 }

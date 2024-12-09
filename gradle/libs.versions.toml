@@ -3,6 +3,7 @@ agp = "8.6.0"
 androidxCredentials = "<latest version>"
 coilCompose = "3.0.4"
 converterGson = "2.9.0"
+coreKtxVersion = "1.10.1"
 credentials = "1.5.0-beta01"
 credentialsPlayServicesAuth = "<latest version>"
 firebaseBom = "33.6.0"
@@ -23,12 +24,17 @@ firebaseAuth = "23.1.0"
 playServicesAuth = "21.2.0"
 retrofit = "2.9.0"
 runtimeLivedata = "1.7.5"
+workRuntimeKtx = "2.10.0"
+workRuntimeKtxVersion = "2.8.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-ktx-v1101 = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
 androidx-credentials-vlatestversion = { module = "androidx.credentials:credentials", version.ref = "androidxCredentials" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+androidx-work-runtime-ktx-v281 = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilCompose" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
