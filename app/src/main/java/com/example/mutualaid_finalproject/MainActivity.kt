@@ -345,7 +345,8 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                             }
                         },
                         uid = currentUser?.uid ?: "",
-                        posts = currentUserPosts
+                        posts = currentUserPosts,
+                        onPostRemoved={viewModel.postRepository.delete(it) {}}
                     )
                 }
                 composable(
