@@ -1,12 +1,19 @@
 package com.example.mutualaid_finalproject.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -14,10 +21,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.mutualaid_finalproject.R
 import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
+
+fun getPhoneNumberUri(phoneNumber: String, scheme: String): Uri? {
+    var digits = phoneNumber.filter {it.isDigit()}
+    if (digits.length > 11 || digits.length < 10) {
+        return null
+    }
+    if (digits.length == 10) {
+        digits = "1$digits"
+    }
+    return Uri.parse("$scheme:$digits")
+}
 
 @Composable
 fun ProfileScreen(
@@ -46,6 +68,7 @@ fun ProfileScreen(
     var newSkill by remember { mutableStateOf("") }
     var editResources by remember { mutableStateOf(false) }
     var newResource by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Column(
         modifier = modifier
@@ -63,7 +86,37 @@ fun ProfileScreen(
         )
 
         // Contact Section
-        SectionHeader("Contact Info")
+        Row(verticalAlignment=Alignment.CenterVertically) {
+            SectionHeader("Contact Info")
+            Spacer(modifier=Modifier.weight(1f))
+            val telUri = getPhoneNumberUri(phoneNumber, "tel")
+            val smsUri = getPhoneNumberUri(phoneNumber, "sms")
+            if (telUri != null) {
+                IconButton(onClick={
+                    val intent = Intent(Intent.ACTION_DIAL, telUri)
+                    context.startActivity(intent)
+                }) {
+                    Icon(Icons.Filled.Call, "Call")
+                }
+                IconButton(onClick={
+                    val intent = Intent(Intent.ACTION_SENDTO, smsUri)
+                    context.startActivity(intent)
+                }) {
+                    Icon(painterResource(R.drawable.baseline_chat_24), "Text")
+                }
+            }
+            if (email != "") {
+                IconButton(onClick={
+                    val intent = Intent(Intent.ACTION_SEND)
+                    intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
+                    intent.setType("message/rfc822")
+//                    context.startActivity(Intent.createChooser(intent, "Choose an Email client:"))
+                    context.startActivity(intent)
+                }) {
+                    Icon(Icons.Filled.Email, "Email")
+                }
+            }
+        }
         Text(
             text = "Email: $email",
             style = MaterialTheme.typography.bodyLarge,
@@ -237,7 +290,7 @@ fun SectionHeader(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.fillMaxWidth()
+        fontWeight = FontWeight.Bold
     )
 }
 
