@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.gms.google.services)
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -89,4 +90,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+//    implementation(libs.firebase.bom.v3370)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
 }

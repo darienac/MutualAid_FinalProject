@@ -1,7 +1,6 @@
 package com.example.mutualaid_finalproject
 
 import android.app.Application
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -48,6 +47,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import android.net.Uri
 import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.model.Post
 import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
@@ -62,6 +62,7 @@ import com.example.mutualaid_finalproject.ui.theme.LogoPurple
 import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
 import com.example.mutualaid_finalproject.ui.theme.OnLogo
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 
@@ -351,17 +352,44 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                       dateLatest: String,
                                       tags: String ->
                             val dateFormat = SimpleDateFormat("yyyy-mm-dd", Locale.US)
+                            var downloadUri: Uri? = null
+                            if (imageUri != null) {
+                                val storage = Firebase.storage
+                                val storageRef = storage.reference
+                                val imageRef = storageRef.child("images/${imageUri.lastPathSegment}")
+                                var uploadTask = imageRef.putFile(imageUri)
+                                uploadTask.addOnFailureListener {
+                                    // Handle unsuccessful uploads
+                                }.addOnSuccessListener { taskSnapshot ->
+                                    // taskSnapshot.metadata contains file metadata such as size, content-type, etc.
+                                }
+                                val urlTask = uploadTask.continueWithTask { task ->
+                                    if (!task.isSuccessful) {
+                                        task.exception?.let {
+                                            throw it
+                                        }
+                                    }
+                                    imageRef.downloadUrl
+                                }.addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        downloadUri = task.result
+                                    } else {
+                                        // Handle failures
+                                    }
+                                }
+                            }
                             if (currentUser != null) {
                                 val newPost = Post(
-                                    pid=java.util.UUID.randomUUID().toString(),
-                                    accepted=false,
-                                    date_expires=Timestamp(dateFormat.parse(dateLatest) ?: Date()),
-                                    date_posted=Timestamp(dateFormat.parse(datePosted) ?: Date()),
-                                    description=description,
-                                    location=location ?: "",
-                                    title=title,
-                                    type=if (type=="request") "request" else "offer",
-                                    uid=currentUser!!.uid
+                                    pid =java.util.UUID.randomUUID().toString(),
+                                    accepted =false,
+                                    date_expires =Timestamp(dateFormat.parse(dateLatest) ?: Date()),
+                                    date_posted =Timestamp(dateFormat.parse(datePosted) ?: Date()),
+                                    description =description,
+                                    location =location ?: "",
+                                    title =title,
+                                    type =if (type=="request") "request" else "offer",
+                                    uid =currentUser!!.uid,
+                                    imageUri =downloadUri
                                 )
                                 viewModel.postRepository.set(newPost, {})
                                 // create the notification with newPost.date_expires
