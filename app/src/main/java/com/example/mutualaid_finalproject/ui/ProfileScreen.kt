@@ -22,18 +22,22 @@ import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    username: String,
+    email: String,
+    phoneNumber: String,
     name: String,
     description: String,
     skills: List<String>,
     resources: List<String>,
     availability: List<ProfileTimeAvailability>,
+    onPhoneNumberChange: (String) -> Unit,
     onNameChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     addSkill: (String) -> Unit,
     addResource: (String) -> Unit,
     changeAvailability: (Int, String) -> Unit
 ) {
+    var editPhoneNumber by remember { mutableStateOf(false) }
+    var newPhoneNumber by remember { mutableStateOf(phoneNumber) }
     var editName by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf(name) }
     var editDescription by remember { mutableStateOf(false) }
@@ -58,12 +62,35 @@ fun ProfileScreen(
             textAlign = TextAlign.Center
         )
 
-        // Username Section
+        // Contact Section
+        SectionHeader("Contact Info")
         Text(
-            text = "Username: $username",
+            text = "Email: $email",
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.fillMaxWidth()
         )
+
+        Row(verticalAlignment=Alignment.CenterVertically) {
+            if (editPhoneNumber) {
+                OutlinedTextField(
+                    value = newPhoneNumber,
+                    onValueChange = { newPhoneNumber = it },
+                    label = { Text("Edit Phone Number") },
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(onClick = {
+                    onPhoneNumberChange(newPhoneNumber)
+                    editPhoneNumber = false
+                }) {
+                    Text("Save")
+                }
+            } else {
+                Text(text = "Phone Number: $phoneNumber", modifier = Modifier.weight(1f))
+                TextButton(onClick = { editPhoneNumber = true }) {
+                    Text("Edit")
+                }
+            }
+        }
 
         // Name Section
         SectionHeader("Name")
@@ -219,12 +246,14 @@ fun SectionHeader(title: String) {
 @Composable
 fun ProfileScreenPreview() {
     ProfileScreen(
-        username = "test_user",
+        email = "test_user",
+        phoneNumber = "",
         name = "John Doe",
         description = "I am a friendly neighbor.",
         skills = listOf("Cooking", "Gardening"),
         resources = listOf("Lawn Mower", "Extra Seeds"),
         availability = List(7) { ProfileTimeAvailability(false, false, false) },
+        onPhoneNumberChange = { println("Phone number changed to: $it") },
         onNameChange = { println("Name changed to: $it") },
         onDescriptionChange = { println("Description changed to: $it") },
         addSkill = { println("Added skill: $it") },
