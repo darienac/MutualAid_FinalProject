@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,7 +56,9 @@ import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
 import com.example.mutualaid_finalproject.ui.SettingsScreen
 import com.example.mutualaid_finalproject.ui.SignInScreen
+import com.example.mutualaid_finalproject.ui.theme.LogoPurple
 import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
+import com.example.mutualaid_finalproject.ui.theme.OnLogo
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
@@ -162,30 +165,46 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar() {
+            NavigationBar(
+                containerColor=LogoPurple,
+                contentColor=OnLogo,
+            ) {
+                val navBarColors = NavigationBarItemColors(
+                    selectedIconColor=LogoPurple,
+                    selectedTextColor=OnLogo,
+                    selectedIndicatorColor=OnLogo,
+                    unselectedIconColor=OnLogo,
+                    unselectedTextColor=OnLogo,
+                    disabledIconColor=OnLogo,
+                    disabledTextColor=OnLogo
+                )
                 NavigationBarItem(
                     selected = navEntry.value?.destination?.route == "ProfileNav",
                     onClick = {navController.navigate("ProfileNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Filled.AccountCircle, "Profile")},
-                    label = {Text("Profile")}
+                    label = {Text("Profile")},
+                    colors=navBarColors
                 )
                 NavigationBarItem(
                     selected = navEntry.value?.destination?.route == "MyPostsNav",
                     onClick = {navController.navigate("MyPostsNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Outlined.Info, "My Posts")},
-                    label = {Text("My Posts")}
+                    label = {Text("My Posts")},
+                    colors=navBarColors
                 )
                 NavigationBarItem(
                     selected = navEntry.value?.destination?.route == "SearchNav",
                     onClick = {navController.navigate("SearchNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Filled.Search, "Search")},
-                    label = {Text("Search")}
+                    label = {Text("Search")},
+                    colors=navBarColors
                 )
                 NavigationBarItem(
                     selected = navEntry.value?.destination?.route == "SettingsNav",
                     onClick = {navController.navigate("SettingsNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Filled.Settings, "Settings")},
-                    label = {Text("Settings")}
+                    label = {Text("Settings")},
+                    colors=navBarColors
                 )
             }
         }
