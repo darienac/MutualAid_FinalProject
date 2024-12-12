@@ -364,6 +364,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                     uid=currentUser!!.uid
                                 )
                                 viewModel.postRepository.set(newPost, {})
+                                // create the notification with newPost.date_expires
                             }
                         },
                         uid = currentUser?.uid ?: "",
