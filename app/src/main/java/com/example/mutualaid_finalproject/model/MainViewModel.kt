@@ -2,6 +2,7 @@ package com.example.mutualaid_finalproject.model
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.credentials.CustomCredential
@@ -9,6 +10,9 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.PasswordCredential
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.Firebase
@@ -16,6 +20,13 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+
+import com.google.firebase.Timestamp
+
+import java.util.Date
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 
 data class UserData(
     val uid: String = "",
@@ -160,4 +171,47 @@ class MainViewModel(application: Application) : ViewModel() {
             }
         }
     }
+
+//    // schedule the notification using work manager
+//    fun scheduleNotification(context: Context, message: String) {
+//        val data = Data.Builder()
+//            .putString("message", message)
+//            .build()
+//
+//        val notificationWork = OneTimeWorkRequestBuilder<NotificationWorker>()
+//            .setInputData(data)
+//            .build()
+//
+//        WorkManager.getInstance(context).enqueue(notificationWork)
+//    }
+    fun scheduleNotification(context: Context, message: String, expirationTimestamp: Timestamp) {
+        val currentTimeMillis = System.currentTimeMillis()
+        val expirationTimeMillis = expirationTimestamp.toDate().time // Convert Timestamp to milliseconds
+        val delayMillis = expirationTimeMillis - currentTimeMillis
+
+        if (delayMillis > 0) { // Only schedule if the expiration time is in the future
+            val data = Data.Builder()
+                .putString("message", message)
+                .build()
+
+            val notificationWork = OneTimeWorkRequestBuilder<NotificationWorker>()
+                .setInitialDelay(delayMillis, java.util.concurrent.TimeUnit.MILLISECONDS) // Delay until expiration
+                .setInputData(data)
+                .build()
+
+            // Calculate the exact time the notification will pop up
+            val notificationTime =  Date(currentTimeMillis + delayMillis)
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val formattedTime = dateFormat.format(notificationTime)
+
+            // Log the time for debugging
+            Log.d("NotificationScheduler", "Notification scheduled to pop up at: $formattedTime")
+
+            WorkManager.getInstance(context).enqueue(notificationWork)
+        }
+        else {
+            Log.d("NotificationScheduler", "Expiration time has already passed. No notification scheduled.")
+        }
+}
+
 }

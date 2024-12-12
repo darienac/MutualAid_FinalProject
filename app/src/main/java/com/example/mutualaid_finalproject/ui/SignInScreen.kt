@@ -30,6 +30,7 @@ fun SignInScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.padding(16.dp)
     ) {
+        Image(painterResource(R.drawable.app_logo), "Mutual Aid")
         Spacer(Modifier.weight(1f))
         OutlinedTextField(
             value = email,

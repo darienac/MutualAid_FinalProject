@@ -1,10 +1,16 @@
 package com.example.mutualaid_finalproject
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -20,6 +26,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,7 +36,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPasswordOption
@@ -39,12 +50,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mutualaid_finalproject.model.DistanceMatrixResponse
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import android.net.Uri
 import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.model.Post
 import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
@@ -55,26 +66,67 @@ import com.example.mutualaid_finalproject.ui.ProfileScreen
 import com.example.mutualaid_finalproject.ui.SearchScreen
 import com.example.mutualaid_finalproject.ui.SettingsScreen
 import com.example.mutualaid_finalproject.ui.SignInScreen
+import com.example.mutualaid_finalproject.ui.theme.LogoPurple
 import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
+import com.example.mutualaid_finalproject.ui.theme.OnLogo
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
-import com.google.firebase.storage.storage
 import kotlinx.coroutines.launch
 
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.content.Context
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+
+
+
+
+//private const val CHANNEL_ID = "post_acceptance_channel"
+//private const val CHANNEL_NAME = "Post Acceptance Notifications"
+//private const val CHANNEL_DESCRIPTION = "Notifications for accepted posts"
 
 
 class MainActivity : ComponentActivity() {
+
+
     val credentialManager = CredentialManager.create(this)
     val coroutineScope = lifecycleScope
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
 
-        enableEdgeToEdge()
+        // Initialize FusedLocationProviderClient
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        // Check and request notification permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val postNotificationPermission = "android.permission.POST_NOTIFICATIONS"
+            if (ContextCompat.checkSelfPermission(this, postNotificationPermission)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(postNotificationPermission),
+                    100
+                )
+            }
+        }
+        
+        enableEdgeToEdge(
+            statusBarStyle=SystemBarStyle.auto(
+                LogoPurple.toArgb(),
+                LogoPurple.toArgb()
+            ),
+            navigationBarStyle=SystemBarStyle.auto(
+                LogoPurple.toArgb(),
+                LogoPurple.toArgb()
+            )
+        )
         setContent {
             MutualAid_FinalProjectTheme {
                 val owner = LocalViewModelStoreOwner.current
@@ -143,11 +195,20 @@ val ANIMATION_DURATION = 200
 
 @Composable
 fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin: (String, String) -> Unit, onSignup: (String, String) -> Unit) { // Outermost composable where probably all/most of the UI logic can go
+    var originLocation: String = ""
     var navController = rememberNavController()
     var navEntry = navController.currentBackStackEntryAsState()
     var postSearchResults = remember {mutableStateListOf<PostSearchResult>()}
     val currentUser by viewModel.currentUser.observeAsState()
     val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
+    
+    // Get a Context for notifications
+    val context = LocalContext.current
+
+    fun setLocation(location: String) {
+        originLocation = location
+        Log.d("MainActivity", "Origin location updated to: $originLocation")
+    }
     val currentUserPosts by viewModel.postRepository.currentUserPosts.collectAsState(emptyList())
 
     if (currentUser == null || currentProfile == null) {
@@ -161,33 +222,54 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
         return
     }
 
+    val expirationTimestamp = Timestamp(1734038949, 0)
+    val message = "Post is about to expire soon!"
+
+    viewModel.scheduleNotification(context, message, expirationTimestamp)
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar() {
+            NavigationBar(
+                containerColor=LogoPurple,
+                contentColor=OnLogo,
+            ) {
+                val navBarColors = NavigationBarItemColors(
+                    selectedIconColor=LogoPurple,
+                    selectedTextColor=OnLogo,
+                    selectedIndicatorColor=OnLogo,
+                    unselectedIconColor=OnLogo,
+                    unselectedTextColor=OnLogo,
+                    disabledIconColor=OnLogo,
+                    disabledTextColor=OnLogo
+                )
                 NavigationBarItem(
                     selected = navEntry.value?.destination?.route == "ProfileNav",
                     onClick = {navController.navigate("ProfileNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Filled.AccountCircle, "Profile")},
-                    label = {Text("Profile")}
+                    label = {Text("Profile")},
+                    colors=navBarColors
                 )
                 NavigationBarItem(
                     selected = navEntry.value?.destination?.route == "MyPostsNav",
                     onClick = {navController.navigate("MyPostsNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Outlined.Info, "My Posts")},
-                    label = {Text("My Posts")}
+                    label = {Text("My Posts")},
+                    colors=navBarColors
                 )
                 NavigationBarItem(
                     selected = navEntry.value?.destination?.route == "SearchNav",
                     onClick = {navController.navigate("SearchNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Filled.Search, "Search")},
-                    label = {Text("Search")}
+                    label = {Text("Search")},
+                    colors=navBarColors
                 )
                 NavigationBarItem(
                     selected = navEntry.value?.destination?.route == "SettingsNav",
                     onClick = {navController.navigate("SettingsNav", navOptions=NavOptions.Builder().setRestoreState(true).build())},
                     icon = {Icon(Icons.Filled.Settings, "Settings")},
-                    label = {Text("Settings")}
+                    label = {Text("Settings")},
+                    colors=navBarColors
                 )
             }
         }
@@ -230,9 +312,10 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                 ) {
                     ProfileScreen(
                         modifier=Modifier,
-                        username=currentUser?.email ?: "",
+                        email=currentUser?.email ?: "",
+                        phoneNumber=currentProfile?.phoneNumber ?: "",
                         name=currentProfile?.name ?: "",
-                        description="Not yet in database schema",
+                        description=currentProfile?.description ?: "",
                         skills=currentProfile?.skills ?: listOf(),
                         resources=currentProfile?.resources ?: listOf(),
                         availability=currentProfile?.daysAvailable ?: listOf(
@@ -243,15 +326,26 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                             ProfileTimeAvailability(false, false, false),
                             ProfileTimeAvailability(false, false, false),
                             ProfileTimeAvailability(false, false, false)),
-                        onNameChange={ name->
-                            currentProfile?.copy(name=name)?.let { viewModel.profileRepository.set(it, {}) }
+                        onPhoneNumberChange={ phoneNumber->
+                            currentProfile?.copy(phoneNumber=phoneNumber)?.let { viewModel.profileRepository.set(it) {} }
                         },
-                        onDescriptionChange={},
+                        onNameChange={ name->
+                            currentProfile?.copy(name=name)?.let { viewModel.profileRepository.set(it) {} }
+                        },
+                        onDescriptionChange={ description->
+                            currentProfile?.copy(description=description)?.let { viewModel.profileRepository.set(it) {} }
+                        },
                         addSkill={ skill->
-                            currentProfile?.copy(skills=currentProfile?.skills?.plus(skill) ?: listOf(skill))?.let { viewModel.profileRepository.set(it, {}) }
+                            currentProfile?.copy(skills=currentProfile?.skills?.plus(skill) ?: listOf(skill))?.let { viewModel.profileRepository.set(it) {} }
+                        },
+                        removeSkill={ index->
+                            currentProfile?.copy(skills=currentProfile?.skills?.drop(index) ?: listOf())?.let { viewModel.profileRepository.set(it) {} }
                         },
                         addResource={ resource->
-                            currentProfile?.copy(resources=currentProfile?.resources?.plus(resource) ?: listOf(resource))?.let { viewModel.profileRepository.set(it, {}) }
+                            currentProfile?.copy(resources=currentProfile?.resources?.plus(resource) ?: listOf(resource))?.let { viewModel.profileRepository.set(it) {} }
+                        },
+                        removeResource={ index->
+                            currentProfile?.copy(skills=currentProfile?.resources?.drop(index) ?: listOf())?.let { viewModel.profileRepository.set(it) {} }
                         },
                         changeAvailability={ index, time ->
                             var newAvailability = currentProfile?.daysAvailable?.toMutableList()
@@ -311,32 +405,6 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                       dateLatest: String,
                                       tags: String ->
                             val dateFormat = SimpleDateFormat("yyyy-mm-dd", Locale.US)
-                            var downloadUri: Uri? = null
-                            if (imageUri != null) {
-                                val storage = Firebase.storage
-                                val storageRef = storage.reference
-                                val imageRef = storageRef.child("images/${imageUri.lastPathSegment}")
-                                var uploadTask = imageRef.putFile(imageUri)
-                                uploadTask.addOnFailureListener {
-                                    // Handle unsuccessful uploads
-                                }.addOnSuccessListener { taskSnapshot ->
-                                    // taskSnapshot.metadata contains file metadata such as size, content-type, etc.
-                                }
-                                val urlTask = uploadTask.continueWithTask { task ->
-                                    if (!task.isSuccessful) {
-                                        task.exception?.let {
-                                            throw it
-                                        }
-                                    }
-                                    imageRef.downloadUrl
-                                }.addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        downloadUri = task.result
-                                    } else {
-                                        // Handle failures
-                                    }
-                                }
-                            }
                             if (currentUser != null) {
                                 val newPost = Post(
                                     pid =java.util.UUID.randomUUID().toString(),
@@ -348,13 +416,15 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                     title =title,
                                     type =if (type=="request") "request" else "offer",
                                     uid =currentUser!!.uid,
-                                    imageUri =downloadUri
+                                    imageUri = null
                                 )
                                 viewModel.postRepository.set(newPost, {})
+                                // create the notification with newPost.date_expires
                             }
                         },
                         uid = currentUser?.uid ?: "",
-                        posts = currentUserPosts
+                        posts = currentUserPosts,
+                        onPostRemoved={viewModel.postRepository.delete(it) {}}
                     )
                 }
                 composable(
@@ -401,25 +471,37 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                     distance="Unknown"
                                 ))
                             }
-                            postSearchResults.clear()
-                            postSearchResults.addAll(newPostSearchResults)
-                            Log.d("SearchScreen", "updating with posts (${posts.size})")
-                            for (postSearchResult in postSearchResults) {
-                                if (postSearchResult.location == "") {
-                                    continue
-                                }
-                                viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
-                                    Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
-                                    for (i in 0..postSearchResults.size-1) {
-                                        if (postSearchResults[i].postId == pid) {
-                                            postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
-                                        }
+//                            viewModel.distanceCalculator.getDistanceAsync(originLocation, postSearchResult.location, postSearchResult.postId) {distance, pid->
+//                                Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+//                                // Sanitize the distance string by removing commas
+//                                val sanitizedDistance = distance?.replace(",", "") ?: "Unknown"
+//
+//                                for (i in 0 until postSearchResults.size) {
+//                                    if (postSearchResults[i].postId == pid) {
+//                                        postSearchResults[i] = postSearchResults[i].copy(distance = sanitizedDistance)
+                             postSearchResults.clear()
+                             postSearchResults.addAll(newPostSearchResults)
+                             Log.d("SearchScreen", "updating with posts (${posts.size})")
+                             for (postSearchResult in postSearchResults) {
+                                 if (postSearchResult.location == "") {
+                                     continue
+                                 }
+                                 viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
+                                     Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+                                     for (i in 0..postSearchResults.size-1) {
+                                         if (postSearchResults[i].postId == pid) {
+                                             postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
+                                         }
                                     }
                                 }
                             }
                         }
-                    }, onPostClicked = {pid ->
-                        Log.d("SearchScreen", "pid: $pid")
+                    }, onPostClicked = {
+                        val expirationTimestamp = Timestamp(1672502400000L, 0)
+                        val message = "Post is about to expire soon!"
+
+                        viewModel.scheduleNotification(context, message, expirationTimestamp) },
+                        setLocation = { location -> setLocation(location)
                     })
                 }
                 composable(
