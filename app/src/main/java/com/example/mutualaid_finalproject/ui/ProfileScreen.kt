@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mutualaid_finalproject.R
 import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
+import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
 
 fun getPhoneNumberUri(phoneNumber: String, scheme: String): Uri? {
     var digits = phoneNumber.filter {it.isDigit()}
@@ -127,13 +128,13 @@ fun ProfileScreen(
                     val intent = Intent(Intent.ACTION_DIAL, telUri)
                     context.startActivity(intent)
                 }) {
-                    Icon(Icons.Filled.Call, "Call")
+                    Icon(Icons.Filled.Call, "Call", tint=MaterialTheme.colorScheme.primary)
                 }
                 IconButton(onClick={
                     val intent = Intent(Intent.ACTION_SENDTO, smsUri)
                     context.startActivity(intent)
                 }) {
-                    Icon(painterResource(R.drawable.baseline_chat_24), "Text")
+                    Icon(painterResource(R.drawable.baseline_chat_24), "Text", tint= MaterialTheme.colorScheme.primary)
                 }
             }
             if (email != "") {
@@ -144,7 +145,7 @@ fun ProfileScreen(
 //                    context.startActivity(Intent.createChooser(intent, "Choose an Email client:"))
                     context.startActivity(intent)
                 }) {
-                    Icon(Icons.Filled.Email, "Email")
+                    Icon(Icons.Filled.Email, "Email", tint=MaterialTheme.colorScheme.primary)
                 }
             }
         }
