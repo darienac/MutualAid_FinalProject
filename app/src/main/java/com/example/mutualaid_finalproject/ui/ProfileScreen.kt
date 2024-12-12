@@ -44,6 +44,7 @@ fun getPhoneNumberUri(phoneNumber: String, scheme: String): Uri? {
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
+    allowEdits: Boolean = true,
     email: String,
     phoneNumber: String,
     name: String,
@@ -84,6 +85,34 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
         )
+
+        // Name Section
+        SectionHeader("Name")
+        if (editName) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = newName,
+                    onValueChange = { newName = it },
+                    label = { Text("Edit Name") },
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(onClick = {
+                    onNameChange(newName)
+                    editName = false
+                }) {
+                    Text("Save")
+                }
+            }
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = name, modifier = Modifier.weight(1f))
+                if (allowEdits) {
+                    TextButton(onClick = { editName = true }) {
+                        Text("Edit")
+                    }
+                }
+            }
+        }
 
         // Contact Section
         Row(verticalAlignment=Alignment.CenterVertically) {
@@ -139,34 +168,10 @@ fun ProfileScreen(
                 }
             } else {
                 Text(text = "Phone Number: $phoneNumber", modifier = Modifier.weight(1f))
-                TextButton(onClick = { editPhoneNumber = true }) {
-                    Text("Edit")
-                }
-            }
-        }
-
-        // Name Section
-        SectionHeader("Name")
-        if (editName) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = newName,
-                    onValueChange = { newName = it },
-                    label = { Text("Edit Name") },
-                    modifier = Modifier.weight(1f)
-                )
-                TextButton(onClick = {
-                    onNameChange(newName)
-                    editName = false
-                }) {
-                    Text("Save")
-                }
-            }
-        } else {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "Name: $name", modifier = Modifier.weight(1f))
-                TextButton(onClick = { editName = true }) {
-                    Text("Edit")
+                if (allowEdits) {
+                    TextButton(onClick = { editPhoneNumber = true }) {
+                        Text("Edit")
+                    }
                 }
             }
         }
@@ -190,9 +195,11 @@ fun ProfileScreen(
             }
         } else {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "Description: $description", modifier = Modifier.weight(1f))
-                TextButton(onClick = { editDescription = true }) {
-                    Text("Edit")
+                Text(text = description, modifier = Modifier.weight(1f))
+                if (allowEdits) {
+                    TextButton(onClick = { editDescription = true }) {
+                        Text("Edit")
+                    }
                 }
             }
         }
@@ -221,8 +228,10 @@ fun ProfileScreen(
                         }
                     }
                 } else {
-                    TextButton(onClick = { editSkills = true }) {
-                        Text("Add Skill")
+                    if (allowEdits) {
+                        TextButton(onClick = { editSkills = true }) {
+                            Text("Add Skill")
+                        }
                     }
                 }
             }
@@ -252,8 +261,10 @@ fun ProfileScreen(
                         }
                     }
                 } else {
-                    TextButton(onClick = { editResources = true }) {
-                        Text("Add Resource")
+                    if (allowEdits) {
+                        TextButton(onClick = { editResources = true }) {
+                            Text("Add Resource")
+                        }
                     }
                 }
             }
@@ -271,11 +282,15 @@ fun ProfileScreen(
                         (time == "Afternoon" && availability[index].afternoon) ||
                         (time == "Evening" && availability[index].evening)
                     if (active) {
-                        FilledTonalButton(onClick = { changeAvailability(index, time) }) {
-                            Text(text = time)
+                        if (allowEdits) {
+                            FilledTonalButton(enabled=allowEdits, onClick = { changeAvailability(index, time) }) {
+                                Text(text = time)
+                            }
+                        } else {
+                            Text(time, modifier=Modifier.padding(16.dp))
                         }
-                    } else {
-                        TextButton(onClick = { changeAvailability(index, time) }) {
+                    } else if (allowEdits) {
+                        TextButton(enabled=allowEdits, onClick = { changeAvailability(index, time) }) {
                             Text(text = time)
                         }
                     }
