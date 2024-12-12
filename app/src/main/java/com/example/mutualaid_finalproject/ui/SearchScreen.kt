@@ -251,30 +251,6 @@ fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSear
     }
 }
 
-
-@Composable
-fun PostItem(postSearchResult: PostSearchResult, onPostClicked: (String) -> Unit) {
-    // Display post details
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { onPostClicked(postSearchResult.postId) },
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = postSearchResult.title,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Text(
-                text = "Distance: ${postSearchResult.distance}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-    }
-}
 @Composable
 fun PostViewingScreen(
     modifier: Modifier = Modifier,

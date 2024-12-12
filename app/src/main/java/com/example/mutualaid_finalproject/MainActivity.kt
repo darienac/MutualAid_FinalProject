@@ -56,7 +56,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import android.net.Uri
 import com.example.mutualaid_finalproject.model.MainViewModel
 import com.example.mutualaid_finalproject.model.Post
 import com.example.mutualaid_finalproject.model.ProfileTimeAvailability
@@ -472,27 +471,27 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                     distance="Unknown"
                                 ))
                             }
-                            viewModel.distanceCalculator.getDistanceAsync(originLocation, postSearchResult.location, postSearchResult.postId) {distance, pid->
-                                Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
-                                // Sanitize the distance string by removing commas
-                                val sanitizedDistance = distance?.replace(",", "") ?: "Unknown"
-
-                                for (i in 0 until postSearchResults.size) {
-                                    if (postSearchResults[i].postId == pid) {
-                                        postSearchResults[i] = postSearchResults[i].copy(distance = sanitizedDistance)
-//                             postSearchResults.clear()
-//                             postSearchResults.addAll(newPostSearchResults)
-//                             Log.d("SearchScreen", "updating with posts (${posts.size})")
-//                             for (postSearchResult in postSearchResults) {
-//                                 if (postSearchResult.location == "") {
-//                                     continue
-//                                 }
-//                                 viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
-//                                     Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
-//                                     for (i in 0..postSearchResults.size-1) {
-//                                         if (postSearchResults[i].postId == pid) {
-//                                             postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
-//                                         }
+//                            viewModel.distanceCalculator.getDistanceAsync(originLocation, postSearchResult.location, postSearchResult.postId) {distance, pid->
+//                                Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+//                                // Sanitize the distance string by removing commas
+//                                val sanitizedDistance = distance?.replace(",", "") ?: "Unknown"
+//
+//                                for (i in 0 until postSearchResults.size) {
+//                                    if (postSearchResults[i].postId == pid) {
+//                                        postSearchResults[i] = postSearchResults[i].copy(distance = sanitizedDistance)
+                             postSearchResults.clear()
+                             postSearchResults.addAll(newPostSearchResults)
+                             Log.d("SearchScreen", "updating with posts (${posts.size})")
+                             for (postSearchResult in postSearchResults) {
+                                 if (postSearchResult.location == "") {
+                                     continue
+                                 }
+                                 viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
+                                     Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+                                     for (i in 0..postSearchResults.size-1) {
+                                         if (postSearchResults[i].postId == pid) {
+                                             postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
+                                         }
                                     }
                                 }
                             }
