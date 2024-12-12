@@ -82,19 +82,30 @@ import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 import android.content.Context
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+
+
+
 
 //private const val CHANNEL_ID = "post_acceptance_channel"
 //private const val CHANNEL_NAME = "Post Acceptance Notifications"
 //private const val CHANNEL_DESCRIPTION = "Notifications for accepted posts"
 
+
 class MainActivity : ComponentActivity() {
+
+
     val credentialManager = CredentialManager.create(this)
     val coroutineScope = lifecycleScope
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
 
+        // Initialize FusedLocationProviderClient
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // Check and request notification permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -109,8 +120,6 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-
-
 
 
 
@@ -204,12 +213,22 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
 //            location = "New York, NY"
 //        )
 //    )
+
+    // Declare a variable for the origin location
+    var originLocation: String = ""
     var postSearchResults = remember {mutableStateListOf<PostSearchResult>()}
     var selectedItem by remember {mutableIntStateOf(0)}
     val currentUser by viewModel.currentUser.observeAsState()
     val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
     // Get a Context for notifications
     val context = LocalContext.current
+
+
+    fun setLocation(location: String) {
+        originLocation = location
+        Log.d("MainActivity", "Origin location updated to: $originLocation")
+    }
+
 
     if (currentUser == null || currentProfile == null) {
         Scaffold(
@@ -221,6 +240,11 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
         }
         return
     }
+
+    val expirationTimestamp = Timestamp(1734038949, 0)
+    val message = "Post is about to expire soon!"
+
+    viewModel.scheduleNotification(context, message, expirationTimestamp)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -344,11 +368,14 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                             if (postSearchResult.location == "") {
                                 continue
                             }
-                            viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
+                            viewModel.distanceCalculator.getDistanceAsync(originLocation, postSearchResult.location, postSearchResult.postId) {distance, pid->
                                 Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
-                                for (i in 0..postSearchResults.size-1) {
+                                // Sanitize the distance string by removing commas
+                                val sanitizedDistance = distance?.replace(",", "") ?: "Unknown"
+
+                                for (i in 0 until postSearchResults.size) {
                                     if (postSearchResults[i].postId == pid) {
-                                        postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
+                                        postSearchResults[i] = postSearchResults[i].copy(distance = sanitizedDistance)
                                     }
                                 }
                             }
@@ -356,7 +383,12 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                     }
                 }, onPostClicked =
 
-                { viewModel.scheduleNotification(context, "Your post has been accepted!") })
+                {   val expirationTimestamp = Timestamp(1672502400000L, 0)
+                    val message = "Post is about to expire soon!"
+
+                    viewModel.scheduleNotification(context, message, expirationTimestamp) },
+                    setLocation = { location -> setLocation(location) })
+
 
 //                {pid ->
 //                    Log.d("SearchScreen", "pid: $pid")

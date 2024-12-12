@@ -1,5 +1,7 @@
 package com.example.mutualaid_finalproject.ui
 
+import android.app.Activity
+import android.content.pm.PackageManager
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,9 +30,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.location.LocationManagerCompat.getCurrentLocation
 import com.example.mutualaid_finalproject.model.Post
+import com.google.android.gms.location.LocationServices
+import android.Manifest
+import android.content.Context
+import android.util.Log
+
 
 //
 //val samplePost1 = Post(
@@ -73,18 +84,21 @@ enum class PostType {
 
 data class Distance(val value: Float, val unit: String)
 
+const val LOCATION_PERMISSION_REQUEST_CODE = 1
+
 @Composable
-fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSearchResult>, onSearch: (String, Float, String ) -> Unit, onPostClicked: (String) -> Unit) { // custom post object that includes distance
+fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSearchResult>, onSearch: (String, Float, String ) -> Unit, onPostClicked: (String) -> Unit, setLocation: (String) -> Unit) { // custom post object that includes distance
     // String for searchQuery, Float for maxDistance, String for all/request/offer
 //    var searchQuery by remember { mutableStateOf("") }
     var maxDistance by remember { mutableStateOf(50f) } // Maximum distance in miles
 //    var postTypeFilter by remember { mutableStateOf<PostType?>(null) } // No filter by default
-    val userLocation = "Boston, MA" // Change later, to see user's location
-
+//    val userLocation = "Boston, MA" // Change later, to see user's location
+    var manualLocation by remember { mutableStateOf("") }
     val filteredPosts = postSearchResults   // change to mutable list?
     // Post Type Filter with Radio Buttons
     val postTypeOptions = listOf("All", "Request", "Offer")
     var selectedOption by remember { mutableStateOf("All") }
+
 
 //    // Filter posts based on search query, distance, and post type
 //    val filteredPosts = posts.filter { post ->
@@ -118,6 +132,58 @@ fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSear
         Column(modifier = Modifier.padding(16.dp)) {
             // Search bar
             LocationInput(maxDistance, selectedOption, onSearch = onSearch)
+
+
+            // Manual Location Input
+            OutlinedTextField(
+                value = manualLocation,
+                onValueChange = { manualLocation = it },
+                label = { Text("Enter Location") },
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+
+            // Button to Set Manual Location
+            TextButton(onClick = {
+                if (manualLocation.isNotBlank()) {
+                    setLocation(manualLocation)
+                }
+            }) {
+                Text("Set Manual Location")
+            }
+
+            val context = LocalContext.current
+            var permissionGranted by remember {
+                mutableStateOf(
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                )
+            }
+
+            if (!permissionGranted) {
+                // Request permission
+                TextButton(onClick = {
+                    ActivityCompat.requestPermissions(
+                        context as Activity,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        LOCATION_PERMISSION_REQUEST_CODE
+                    )
+                }) {
+                    Text("Request Permission")
+                }
+            } else {
+                // Permission granted, fetch location
+                TextButton(onClick = {
+                    getCurrentLocation(context) { location ->
+                        setLocation(location)
+                    }
+                }) {
+                    Text("Use Current Location")
+                }
+            }
+
+
 
             // Distance Slider (miles)
             Text(
@@ -307,6 +373,25 @@ fun PostViewingScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(if (isEditing) "Switch to View Mode" else "Switch to Edit Mode")
+        }
+    }
+}
+
+fun getCurrentLocation(context: Context, onLocationReceived: (String) -> Unit) {
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+    if (ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    ) {
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                val currentLocation = "${location.latitude}, ${location.longitude}"
+                Log.d("LocationUpdate", "New location: Latitude = ${location.latitude}, Longitude = ${location.longitude}")
+                onLocationReceived(currentLocation)
+            } else {
+                onLocationReceived("Location unavailable")
+            }
         }
     }
 }

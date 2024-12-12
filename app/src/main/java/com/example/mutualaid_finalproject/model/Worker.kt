@@ -54,20 +54,19 @@ class NotificationWorker(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // build and show notification
+        // Build and show notification
         val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setContentTitle("Post Status Update")
+            .setContentTitle("Post Expiration Alert")
             .setContentText(message)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-
-//            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // Make it a high priority for heads-up notification
-            .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE) // Sound and vibration
-            .setAutoCancel(true) // Dismiss the notification when clicked
-            .setFullScreenIntent(pendingIntent, true) // Make the notification open MainActivity when tapped
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
             .build()
 
-        notificationManager.notify(1, notification)
+        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
     }
+
 }
 
