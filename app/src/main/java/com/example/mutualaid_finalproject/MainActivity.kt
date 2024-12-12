@@ -231,7 +231,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                         email=currentUser?.email ?: "",
                         phoneNumber=currentProfile?.phoneNumber ?: "",
                         name=currentProfile?.name ?: "",
-                        description="Not yet in database schema",
+                        description=currentProfile?.description ?: "",
                         skills=currentProfile?.skills ?: listOf(),
                         resources=currentProfile?.resources ?: listOf(),
                         availability=currentProfile?.daysAvailable ?: listOf(
@@ -243,17 +243,19 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                             ProfileTimeAvailability(false, false, false),
                             ProfileTimeAvailability(false, false, false)),
                         onPhoneNumberChange={ phoneNumber->
-                            currentProfile?.copy(phoneNumber=phoneNumber)?.let { viewModel.profileRepository.set(it, {}) }
+                            currentProfile?.copy(phoneNumber=phoneNumber)?.let { viewModel.profileRepository.set(it) {} }
                         },
                         onNameChange={ name->
-                            currentProfile?.copy(name=name)?.let { viewModel.profileRepository.set(it, {}) }
+                            currentProfile?.copy(name=name)?.let { viewModel.profileRepository.set(it) {} }
                         },
-                        onDescriptionChange={},
+                        onDescriptionChange={ description->
+                            currentProfile?.copy(description=description)?.let { viewModel.profileRepository.set(it) {} }
+                        },
                         addSkill={ skill->
-                            currentProfile?.copy(skills=currentProfile?.skills?.plus(skill) ?: listOf(skill))?.let { viewModel.profileRepository.set(it, {}) }
+                            currentProfile?.copy(skills=currentProfile?.skills?.plus(skill) ?: listOf(skill))?.let { viewModel.profileRepository.set(it) {} }
                         },
                         addResource={ resource->
-                            currentProfile?.copy(resources=currentProfile?.resources?.plus(resource) ?: listOf(resource))?.let { viewModel.profileRepository.set(it, {}) }
+                            currentProfile?.copy(resources=currentProfile?.resources?.plus(resource) ?: listOf(resource))?.let { viewModel.profileRepository.set(it) {} }
                         },
                         changeAvailability={ index, time ->
                             var newAvailability = currentProfile?.daysAvailable?.toMutableList()
