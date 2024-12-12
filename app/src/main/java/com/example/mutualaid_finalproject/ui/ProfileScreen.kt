@@ -44,7 +44,7 @@ fun getPhoneNumberUri(phoneNumber: String, scheme: String): Uri? {
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    allowEdits: Boolean = true,
+    allowEdits: Boolean = false,
     email: String,
     phoneNumber: String,
     name: String,
@@ -56,7 +56,9 @@ fun ProfileScreen(
     onNameChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     addSkill: (String) -> Unit,
+    removeSkill: (Int) -> Unit,
     addResource: (String) -> Unit,
+    removeResource: (Int) -> Unit,
     changeAvailability: (Int, String) -> Unit
 ) {
     var editPhoneNumber by remember { mutableStateOf(false) }
@@ -206,69 +208,11 @@ fun ProfileScreen(
 
         // Skills Section
         SectionHeader("Skills")
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier=Modifier.height(128.dp).fillMaxWidth().background(MaterialTheme.colorScheme.secondaryContainer)) {
-            items(skills) { skill ->
-                Text(text = "- $skill", style = MaterialTheme.typography.bodyLarge)
-            }
-            item {
-                if (editSkills) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = newSkill,
-                            onValueChange = { newSkill = it },
-                            label = { Text("New Skill") },
-                            modifier = Modifier.weight(1f)
-                        )
-                        TextButton(onClick = {
-                            addSkill(newSkill)
-                            newSkill = ""
-                            editSkills = false
-                        }) {
-                            Text("Add")
-                        }
-                    }
-                } else {
-                    if (allowEdits) {
-                        TextButton(onClick = { editSkills = true }) {
-                            Text("Add Skill")
-                        }
-                    }
-                }
-            }
-        }
+        ChipList(allowEdits, "New Skill", skills, onRemoveIndex=removeSkill, onAddItem=addSkill)
 
         // Resources Section
         SectionHeader("Resources")
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier=Modifier.height(128.dp).fillMaxWidth().background(MaterialTheme.colorScheme.secondaryContainer)) {
-            items(resources) { resource ->
-                Text(text = "- $resource", style = MaterialTheme.typography.bodyLarge)
-            }
-            item {
-                if (editResources) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = newResource,
-                            onValueChange = { newResource = it },
-                            label = { Text("New Resource") },
-                            modifier = Modifier.weight(1f)
-                        )
-                        TextButton(onClick = {
-                            addResource(newResource)
-                            newResource = ""
-                            editResources = false
-                        }) {
-                            Text("Add")
-                        }
-                    }
-                } else {
-                    if (allowEdits) {
-                        TextButton(onClick = { editResources = true }) {
-                            Text("Add Resource")
-                        }
-                    }
-                }
-            }
-        }
+        ChipList(allowEdits, "New Resource", resources, onRemoveIndex=removeResource, onAddItem=addResource)
 
         // Availability Section
         SectionHeader("Availability")
@@ -325,7 +269,9 @@ fun ProfileScreenPreview() {
         onNameChange = { println("Name changed to: $it") },
         onDescriptionChange = { println("Description changed to: $it") },
         addSkill = { println("Added skill: $it") },
+        removeSkill = { println("Removed skill: $it") },
         addResource = { println("Added resource: $it") },
+        removeResource = { println("Removed resource: $it") },
         changeAvailability = { day, time -> println("Changed $time availability for day: $day") }
     )
 }

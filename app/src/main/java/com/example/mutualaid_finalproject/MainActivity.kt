@@ -254,8 +254,14 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                         addSkill={ skill->
                             currentProfile?.copy(skills=currentProfile?.skills?.plus(skill) ?: listOf(skill))?.let { viewModel.profileRepository.set(it) {} }
                         },
+                        removeSkill={ index->
+                            currentProfile?.copy(skills=currentProfile?.skills?.drop(index) ?: listOf())?.let { viewModel.profileRepository.set(it) {} }
+                        },
                         addResource={ resource->
                             currentProfile?.copy(resources=currentProfile?.resources?.plus(resource) ?: listOf(resource))?.let { viewModel.profileRepository.set(it) {} }
+                        },
+                        removeResource={ index->
+                            currentProfile?.copy(skills=currentProfile?.resources?.drop(index) ?: listOf())?.let { viewModel.profileRepository.set(it) {} }
                         },
                         changeAvailability={ index, time ->
                             var newAvailability = currentProfile?.daysAvailable?.toMutableList()
