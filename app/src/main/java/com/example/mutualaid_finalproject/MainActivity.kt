@@ -1,6 +1,11 @@
 package com.example.mutualaid_finalproject
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -33,6 +38,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPasswordOption
@@ -42,6 +50,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mutualaid_finalproject.model.DistanceMatrixResponse
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -69,15 +78,46 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.content.Context
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+
+
+
+
+//private const val CHANNEL_ID = "post_acceptance_channel"
+//private const val CHANNEL_NAME = "Post Acceptance Notifications"
+//private const val CHANNEL_DESCRIPTION = "Notifications for accepted posts"
 
 
 class MainActivity : ComponentActivity() {
+
+
     val credentialManager = CredentialManager.create(this)
     val coroutineScope = lifecycleScope
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
 
+        // Initialize FusedLocationProviderClient
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        // Check and request notification permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val postNotificationPermission = "android.permission.POST_NOTIFICATIONS"
+            if (ContextCompat.checkSelfPermission(this, postNotificationPermission)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(postNotificationPermission),
+                    100
+                )
+            }
+        }
+        
         enableEdgeToEdge(
             statusBarStyle=SystemBarStyle.auto(
                 LogoPurple.toArgb(),
@@ -156,11 +196,20 @@ val ANIMATION_DURATION = 200
 
 @Composable
 fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin: (String, String) -> Unit, onSignup: (String, String) -> Unit) { // Outermost composable where probably all/most of the UI logic can go
+    var originLocation: String = ""
     var navController = rememberNavController()
     var navEntry = navController.currentBackStackEntryAsState()
     var postSearchResults = remember {mutableStateListOf<PostSearchResult>()}
     val currentUser by viewModel.currentUser.observeAsState()
     val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
+    
+    // Get a Context for notifications
+    val context = LocalContext.current
+
+    fun setLocation(location: String) {
+        originLocation = location
+        Log.d("MainActivity", "Origin location updated to: $originLocation")
+    }
     val currentUserPosts by viewModel.postRepository.currentUserPosts.collectAsState(emptyList())
 
     if (currentUser == null || currentProfile == null) {
@@ -173,6 +222,11 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
         }
         return
     }
+
+    val expirationTimestamp = Timestamp(1734038949, 0)
+    val message = "Post is about to expire soon!"
+
+    viewModel.scheduleNotification(context, message, expirationTimestamp)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -418,25 +472,37 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                     distance="Unknown"
                                 ))
                             }
-                            postSearchResults.clear()
-                            postSearchResults.addAll(newPostSearchResults)
-                            Log.d("SearchScreen", "updating with posts (${posts.size})")
-                            for (postSearchResult in postSearchResults) {
-                                if (postSearchResult.location == "") {
-                                    continue
-                                }
-                                viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
-                                    Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
-                                    for (i in 0..postSearchResults.size-1) {
-                                        if (postSearchResults[i].postId == pid) {
-                                            postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
-                                        }
+                            viewModel.distanceCalculator.getDistanceAsync(originLocation, postSearchResult.location, postSearchResult.postId) {distance, pid->
+                                Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+                                // Sanitize the distance string by removing commas
+                                val sanitizedDistance = distance?.replace(",", "") ?: "Unknown"
+
+                                for (i in 0 until postSearchResults.size) {
+                                    if (postSearchResults[i].postId == pid) {
+                                        postSearchResults[i] = postSearchResults[i].copy(distance = sanitizedDistance)
+//                             postSearchResults.clear()
+//                             postSearchResults.addAll(newPostSearchResults)
+//                             Log.d("SearchScreen", "updating with posts (${posts.size})")
+//                             for (postSearchResult in postSearchResults) {
+//                                 if (postSearchResult.location == "") {
+//                                     continue
+//                                 }
+//                                 viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
+//                                     Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+//                                     for (i in 0..postSearchResults.size-1) {
+//                                         if (postSearchResults[i].postId == pid) {
+//                                             postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
+//                                         }
                                     }
                                 }
                             }
                         }
-                    }, onPostClicked = {pid ->
-                        Log.d("SearchScreen", "pid: $pid")
+                    }, onPostClicked = {
+                        val expirationTimestamp = Timestamp(1672502400000L, 0)
+                        val message = "Post is about to expire soon!"
+
+                        viewModel.scheduleNotification(context, message, expirationTimestamp) },
+                        setLocation = { location -> setLocation(location)
                     })
                 }
                 composable(
