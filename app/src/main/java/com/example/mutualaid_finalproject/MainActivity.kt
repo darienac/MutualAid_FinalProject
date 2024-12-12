@@ -352,32 +352,6 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                       dateLatest: String,
                                       tags: String ->
                             val dateFormat = SimpleDateFormat("yyyy-mm-dd", Locale.US)
-                            var downloadUri: Uri? = null
-                            if (imageUri != null) {
-                                val storage = Firebase.storage
-                                val storageRef = storage.reference
-                                val imageRef = storageRef.child("images/${imageUri.lastPathSegment}")
-                                var uploadTask = imageRef.putFile(imageUri)
-                                uploadTask.addOnFailureListener {
-                                    // Handle unsuccessful uploads
-                                }.addOnSuccessListener { taskSnapshot ->
-                                    // taskSnapshot.metadata contains file metadata such as size, content-type, etc.
-                                }
-                                val urlTask = uploadTask.continueWithTask { task ->
-                                    if (!task.isSuccessful) {
-                                        task.exception?.let {
-                                            throw it
-                                        }
-                                    }
-                                    imageRef.downloadUrl
-                                }.addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        downloadUri = task.result
-                                    } else {
-                                        // Handle failures
-                                    }
-                                }
-                            }
                             if (currentUser != null) {
                                 val newPost = Post(
                                     pid =java.util.UUID.randomUUID().toString(),
@@ -389,7 +363,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                     title =title,
                                     type =if (type=="request") "request" else "offer",
                                     uid =currentUser!!.uid,
-                                    imageUri =downloadUri
+                                    imageUri = null
                                 )
                                 viewModel.postRepository.set(newPost, {})
                                 // create the notification with newPost.date_expires
