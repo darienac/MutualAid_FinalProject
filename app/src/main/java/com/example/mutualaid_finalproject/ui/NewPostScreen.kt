@@ -212,7 +212,9 @@ fun NewPostScreen(
             onClick = {
                 val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm")
                 val current = LocalDateTime.now().format(formatter)
-                val latest = convertMillisToDate(selectedDate!!).format(formatter)
+                val latest = if (selectedDate!=null)
+                    convertMillisToDate(selectedDate!!).format(formatter)
+                    else current // error message snackbar
                 postFunction(
                     type,
                     username,
