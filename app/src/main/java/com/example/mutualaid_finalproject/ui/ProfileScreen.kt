@@ -44,7 +44,7 @@ fun getPhoneNumberUri(phoneNumber: String, scheme: String): Uri? {
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    allowEdits: Boolean = false,
+    allowEdits: Boolean = true,
     email: String,
     phoneNumber: String,
     name: String,
