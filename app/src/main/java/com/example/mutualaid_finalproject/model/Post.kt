@@ -1,5 +1,6 @@
 package com.example.mutualaid_finalproject.model
 
+import android.net.Uri
 import com.google.firebase.Timestamp
 
 data class Post(
@@ -11,5 +12,6 @@ data class Post(
     val location: String = "",
     val title: String = "",
     val type: String = "",
-    val uid: String = "NO_USER"
+    val uid: String = "NO_USER",
+    val imageUri: Uri? = null
 )

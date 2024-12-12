@@ -7,6 +7,7 @@ coreKtxVersion = "1.10.1"
 credentials = "1.5.0-beta01"
 credentialsPlayServicesAuth = "<latest version>"
 firebaseBom = "33.6.0"
+firebaseBomVersion = "33.7.0"
 firebaseUiAuth = "7.2.0"
 googleid = "<latest version>"
 kotlin = "1.9.0"
@@ -40,7 +41,10 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCo
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilCompose" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "converterGson" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-bom-v3370 = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBomVersion" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 firebase-ui-auth = { module = "com.firebaseui:firebase-ui-auth", version.ref = "firebaseUiAuth" }
 google-firebase-auth = { module = "com.google.firebase:firebase-auth" }

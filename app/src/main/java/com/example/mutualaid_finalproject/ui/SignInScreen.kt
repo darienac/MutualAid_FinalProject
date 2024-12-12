@@ -30,6 +30,7 @@ fun SignInScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.padding(16.dp)
     ) {
+        Image(painterResource(R.drawable.app_logo), "Mutual Aid")
         Spacer(Modifier.weight(1f))
         OutlinedTextField(
             value = email,
@@ -47,20 +48,26 @@ fun SignInScreen(
         Spacer(modifier = Modifier.height(16.dp))
         TextButton(
             onClick = {
-                onLogin(email, password)
+                if (email != "" && password != "") {
+                    onLogin(email, password)
+                }
                 email = ""
                 password = ""
             },
+            enabled=(email != "" && password != ""),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Login")
         }
         TextButton(
             onClick = {
-                onSignup(email, password)
+                if (email != "" && password != "") {
+                    onSignup(email, password)
+                }
                 email = ""
                 password = ""
             },
+            enabled=(email != "" && password != ""),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Signup")
