@@ -58,7 +58,6 @@ fun MyPostsScreen(
         username: String,
         title: String,
         description: String,
-        imageUri: Uri?,
         location: String?,
         datePosted: String,
         dateLatest: String,
@@ -85,9 +84,9 @@ fun MyPostsScreen(
 
     if (newPostScreenOpen && useOnePane) {
         InnerScreen(title="New Post", onClose={newPostScreenOpen=false}) {
-            NewPostScreen(modifier, uid) {type,username,title,description,imageUri,location,datePosted,dateLatest,tags->
+            NewPostScreen(modifier, uid) {type,username,title,description,location,datePosted,dateLatest,tags->
                 newPostScreenOpen=false
-                onNewPost(type, username, title, description, imageUri, location ,datePosted, dateLatest, tags)
+                onNewPost(type, username, title, description, location ,datePosted, dateLatest, tags)
             }
         }
         return
@@ -123,9 +122,9 @@ fun MyPostsScreen(
                 }
                 Box(modifier=Modifier.weight(1f)) {
                     if (newPostScreenOpen) {
-                        NewPostScreen(modifier, uid) {type,username,title,description,imageUri,location,datePosted,dateLatest,tags->
+                        NewPostScreen(modifier, uid) {type,username,title,description,location,datePosted,dateLatest,tags->
                             newPostScreenOpen=false
-                            onNewPost(type, username, title, description, imageUri, location ,datePosted, dateLatest, tags)
+                            onNewPost(type, username, title, description, location ,datePosted, dateLatest, tags)
                         }
                     } else {
                         Text("No post selected", modifier=Modifier.padding(16.dp).fillMaxWidth(), textAlign=TextAlign.Center)
@@ -185,6 +184,6 @@ fun MyPostsScreen_PostItemWithRemove(post: Post, onPostClicked: (String)->Unit, 
 @Composable
 fun MyPostsPreview() {
     Box(modifier=Modifier.fillMaxSize()) {
-        MyPostsScreen(modifier=Modifier, "", emptyList(), {_,_,_,_,_,_,_,_,_->}, {})
+        MyPostsScreen(modifier=Modifier, "", emptyList(), {_,_,_,_,_,_,_,_->}, {})
     }
 }
