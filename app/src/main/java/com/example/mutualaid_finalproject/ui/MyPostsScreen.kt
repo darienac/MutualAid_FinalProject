@@ -83,13 +83,36 @@ fun MyPostsScreen(
     }
 
     if (newPostScreenOpen && useOnePane) {
-        InnerScreen(title="New Post", onClose={newPostScreenOpen=false}) {
+        InnerScreen(title="New Post", onClose={newPostScreenOpen=false; postSelected=null}) {
             NewPostScreen(modifier, uid) {type,username,title,description,location,datePosted,dateLatest,tags->
                 newPostScreenOpen=false
                 onNewPost(type, username, title, description, location ,datePosted, dateLatest, tags)
             }
         }
         return
+    }
+
+    if (postSelected != null && useOnePane) {
+        val post = posts.find {it.pid == postSelected}
+        if (post != null) {
+            PostViewingScreen(
+                post=PostSearchResult(
+                    postId=post.pid,
+                    type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
+                    isAccepted=post.accepted,
+                    title=post.title,
+                    location=post.location,
+                    distance=""
+                ),
+                isEditable=true,
+                onClose={
+                    newPostScreenOpen=false
+                    postSelected=null
+                },
+                onEditToggle={}
+            )
+            return
+        }
     }
 
     Scaffold(
@@ -125,6 +148,26 @@ fun MyPostsScreen(
                         NewPostScreen(modifier, uid) {type,username,title,description,location,datePosted,dateLatest,tags->
                             newPostScreenOpen=false
                             onNewPost(type, username, title, description, location ,datePosted, dateLatest, tags)
+                        }
+                    } else if (postSelected != null) {
+                        val post = posts.find {it.pid == postSelected}
+                        if (post != null) {
+                            PostViewingScreen(
+                                post=PostSearchResult(
+                                    postId=post.pid,
+                                    type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
+                                    isAccepted=post.accepted,
+                                    title=post.title,
+                                    location=post.location,
+                                    distance=""
+                                ),
+                                isEditable=true,
+                                onClose={
+                                    newPostScreenOpen=false
+                                    postSelected=null
+                                },
+                                onEditToggle={}
+                            )
                         }
                     } else {
                         Text("No post selected", modifier=Modifier.padding(16.dp).fillMaxWidth(), textAlign=TextAlign.Center)
