@@ -1,10 +1,7 @@
 package com.example.mutualaid_finalproject
 
 import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -38,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.credentials.CredentialManager
@@ -50,7 +46,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.mutualaid_finalproject.model.DistanceMatrixResponse
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -70,18 +65,15 @@ import com.example.mutualaid_finalproject.ui.theme.LogoPurple
 import com.example.mutualaid_finalproject.ui.theme.MutualAid_FinalProjectTheme
 import com.example.mutualaid_finalproject.ui.theme.OnLogo
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import android.content.Context
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-
-
+import java.text.ParseException
 
 
 //private const val CHANNEL_ID = "post_acceptance_channel"
@@ -399,26 +391,56 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                       username: String,
                                       title: String,
                                       description: String,
-                                      imageUri: Uri?,
                                       location: String?,
                                       datePosted: String,
                                       dateLatest: String,
                                       tags: String ->
-                            val dateFormat = SimpleDateFormat("yyyy-mm-dd", Locale.US)
+                            val dateFormatPosted = SimpleDateFormat("MM-dd-yyyy HH:mm", Locale.US)
+                            val dateFormatLatest = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+                            var timestampLatest: Timestamp? = null
+                            var timestampPosted: Timestamp? = null
+                            if (title == "") {
+                                Toast.makeText(
+                                    context,
+                                    "No title given",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                return@MyPostsScreen
+                            }
+                            if (type != "Request" && type != "Offer") {
+                                Toast.makeText(
+                                    context,
+                                    "Post must be either 'Request' or 'Offer'",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                return@MyPostsScreen
+                            }
+                            try {
+                                timestampLatest = Timestamp(dateFormatLatest.parse(dateLatest) ?: Date())
+                                timestampPosted = Timestamp(dateFormatPosted.parse(datePosted) ?: Date())
+                            } catch (e: ParseException) {
+                                Toast.makeText(
+                                    context,
+                                    "Invalid date(s) given",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                Log.d("NewPost", "Date Latest: $dateLatest")
+                                Log.d("NewPost", "Date Posted: $datePosted")
+                                return@MyPostsScreen
+                            }
                             if (currentUser != null) {
                                 val newPost = Post(
                                     pid =java.util.UUID.randomUUID().toString(),
                                     accepted =false,
-                                    date_expires =Timestamp(dateFormat.parse(dateLatest) ?: Date()),
-                                    date_posted =Timestamp(dateFormat.parse(datePosted) ?: Date()),
-                                    description =description,
-                                    location =location ?: "",
-                                    title =title,
-                                    type =if (type=="request") "request" else "offer",
-                                    uid =currentUser!!.uid,
-                                    imageUri = null
+                                    date_expires = timestampLatest,
+                                    date_posted = timestampPosted,
+                                    description = description,
+                                    location = location ?: "",
+                                    title = title,
+                                    type = if (type=="Request") "request" else "offer",
+                                    uid = currentUser!!.uid
                                 )
-                                viewModel.postRepository.set(newPost, {})
+                                viewModel.postRepository.set(newPost) {}
                                 // create the notification with newPost.date_expires
                             }
                         },
