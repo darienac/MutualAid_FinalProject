@@ -1,4 +1,7 @@
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -19,15 +22,20 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import coil3.compose.rememberAsyncImagePainter
+import com.google.android.gms.location.LocationServices
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +53,7 @@ fun NewPostScreen(
         tags: String
     ) -> Unit
 ) {
+
     var type by remember { mutableStateOf("Offer/Request") }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -53,6 +62,31 @@ fun NewPostScreen(
     var expanded by remember { mutableStateOf(false)}
     var selectedDate by remember { mutableStateOf<Long?>(null) }
     var showModal by remember { mutableStateOf(false) }
+
+
+    val context = LocalContext.current
+    val permission = "android.permission.POST_NOTIFICATIONS"
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                // Permission granted
+            } else {
+                Toast.makeText(context, "Notification permission is not granted.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    LaunchedEffect(key1 = Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionLauncher.launch(permission)
+            }
+        }
+    }
+
+
+
 
     // Image Picker Launcher
 //    val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -208,6 +242,7 @@ fun NewPostScreen(
 
         Button(
             onClick = {
+
                 val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm")
                 val current = LocalDateTime.now().format(formatter)
                 val latest = if (selectedDate!=null)

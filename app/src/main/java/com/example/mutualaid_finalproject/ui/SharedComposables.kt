@@ -83,7 +83,7 @@ fun LocationInput(maxDistance: Float, selectedOption: String, onSearch: (String,
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 8.dp),
-            textStyle = TextStyle(fontSize = 16.sp),
+            textStyle = TextStyle(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             singleLine = true
         )
@@ -118,7 +118,7 @@ fun MeetingAddressCard(
             Text(
                 text = "Meeting Address",
                 style = MaterialTheme.typography.titleLarge,
-                color = Color.Black,
+
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
