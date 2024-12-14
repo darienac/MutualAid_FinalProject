@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -36,14 +37,18 @@ fun SignInScreen(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("email_input")
         )
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("password_input")
         )
         Spacer(modifier = Modifier.height(16.dp))
         TextButton(
@@ -55,7 +60,9 @@ fun SignInScreen(
                 password = ""
             },
             enabled=(email != "" && password != ""),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("login_button")
         ) {
             Text(text = "Login")
         }
@@ -68,14 +75,18 @@ fun SignInScreen(
                 password = ""
             },
             enabled=(email != "" && password != ""),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("signup_button")
         ) {
             Text(text = "Signup")
         }
         Spacer(Modifier.weight(1f))
         Button(
             onClick = onGoogleLogin,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("google_login_button"),
             colors=ButtonColors(Color.Black, Color.White, Color.Black, Color.White),
         ) {
             Row(verticalAlignment=Alignment.CenterVertically) {

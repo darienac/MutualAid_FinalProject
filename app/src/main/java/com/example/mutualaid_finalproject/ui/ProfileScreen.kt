@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -85,7 +86,9 @@ fun ProfileScreen(
         Text(
             text = "Profile",
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+                .fillMaxWidth()
+                .testTag("profile_screen"),
             textAlign = TextAlign.Center
         )
 
@@ -97,7 +100,9 @@ fun ProfileScreen(
                     value = newName,
                     onValueChange = { newName = it },
                     label = { Text("Edit Name") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("name_input")
                 )
                 TextButton(onClick = {
                     onNameChange(newName)
@@ -152,7 +157,9 @@ fun ProfileScreen(
         Text(
             text = "Email: $email",
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("email_input")
         )
 
         Row(verticalAlignment=Alignment.CenterVertically) {

@@ -78,6 +78,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import android.content.Context
+import androidx.compose.runtime.rememberCoroutineScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
@@ -201,6 +202,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
     var postSearchResults = remember {mutableStateListOf<PostSearchResult>()}
     val currentUser by viewModel.currentUser.observeAsState()
     val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
+    val coroutineScope = rememberCoroutineScope()
     
     // Get a Context for notifications
     val context = LocalContext.current
@@ -327,42 +329,60 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                             ProfileTimeAvailability(false, false, false),
                             ProfileTimeAvailability(false, false, false)),
                         onPhoneNumberChange={ phoneNumber->
-                            currentProfile?.copy(phoneNumber=phoneNumber)?.let { viewModel.profileRepository.set(it) {} }
+                                currentProfile?.copy(phoneNumber = phoneNumber)
+                                    ?.let { viewModel.profileRepository.set(it) {} }
                         },
                         onNameChange={ name->
-                            currentProfile?.copy(name=name)?.let { viewModel.profileRepository.set(it) {} }
+                                currentProfile?.copy(name = name)
+                                    ?.let { viewModel.profileRepository.set(it) {} }
                         },
                         onDescriptionChange={ description->
-                            currentProfile?.copy(description=description)?.let { viewModel.profileRepository.set(it) {} }
+                                currentProfile?.copy(description = description)
+                                    ?.let { viewModel.profileRepository.set(it) {} }
                         },
                         addSkill={ skill->
-                            currentProfile?.copy(skills=currentProfile?.skills?.plus(skill) ?: listOf(skill))?.let { viewModel.profileRepository.set(it) {} }
+                                currentProfile?.copy(
+                                    skills = currentProfile?.skills?.plus(skill) ?: listOf(skill)
+                                )?.let { viewModel.profileRepository.set(it) {} }
                         },
                         removeSkill={ index->
-                            currentProfile?.copy(skills=currentProfile?.skills?.drop(index) ?: listOf())?.let { viewModel.profileRepository.set(it) {} }
+                                currentProfile?.copy(
+                                    skills = currentProfile?.skills?.drop(index) ?: listOf()
+                                )?.let { viewModel.profileRepository.set(it) {} }
                         },
                         addResource={ resource->
-                            currentProfile?.copy(resources=currentProfile?.resources?.plus(resource) ?: listOf(resource))?.let { viewModel.profileRepository.set(it) {} }
+                                currentProfile?.copy(
+                                    resources = currentProfile?.resources?.plus(
+                                        resource
+                                    ) ?: listOf(resource)
+                                )?.let { viewModel.profileRepository.set(it) {} }
                         },
                         removeResource={ index->
-                            currentProfile?.copy(skills=currentProfile?.resources?.drop(index) ?: listOf())?.let { viewModel.profileRepository.set(it) {} }
+                                currentProfile?.copy(
+                                    skills = currentProfile?.resources?.drop(index) ?: listOf()
+                                )?.let { viewModel.profileRepository.set(it) {} }
                         },
-                        changeAvailability={ index, time ->
-                            var newAvailability = currentProfile?.daysAvailable?.toMutableList()
-                            if (newAvailability != null) {
-                                if (time == "Morning") {
-                                    newAvailability[index] = newAvailability[index].copy(morning=!newAvailability[index].morning)
-                                } else if (time == "Afternoon") {
-                                    newAvailability[index] = newAvailability[index].copy(afternoon=!newAvailability[index].afternoon)
-                                } else if (time == "Evening") {
-                                    newAvailability[index] = newAvailability[index].copy(evening=!newAvailability[index].evening)
-                                }
+                        changeAvailability= { index, time ->
+                                var newAvailability = currentProfile?.daysAvailable?.toMutableList()
+                                if (newAvailability != null) {
+                                    if (time == "Morning") {
+                                        newAvailability[index] =
+                                            newAvailability[index].copy(morning = !newAvailability[index].morning)
+                                    } else if (time == "Afternoon") {
+                                        newAvailability[index] =
+                                            newAvailability[index].copy(afternoon = !newAvailability[index].afternoon)
+                                    } else if (time == "Evening") {
+                                        newAvailability[index] =
+                                            newAvailability[index].copy(evening = !newAvailability[index].evening)
+                                    }
 
-                                currentProfile?.copy(daysAvailable = newAvailability)?.let { viewModel.profileRepository.set(it, {}) }
-                            }
+                                    currentProfile?.copy(daysAvailable = newAvailability)
+                                        ?.let { viewModel.profileRepository.set(it, {}) }
+                                }
                         }
                     )
                 }
+
                 composable(
                     "MyPostsNav",
                     enterTransition={
