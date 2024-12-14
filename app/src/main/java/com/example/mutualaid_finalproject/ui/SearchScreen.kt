@@ -96,6 +96,20 @@ data class Distance(val value: Float, val unit: String)
 
 const val LOCATION_PERMISSION_REQUEST_CODE = 1
 
+fun convertToPost(postSearchResult: PostSearchResult): Post {
+    return Post(
+        pid = postSearchResult.postId,
+        accepted = postSearchResult.isAccepted,
+        date_expires = com.google.firebase.Timestamp.now(), // Placeholder
+        date_posted = com.google.firebase.Timestamp.now(), // Placeholder
+        description = "Description for ${postSearchResult.title}", // Placeholder
+        location = postSearchResult.location,
+        title = postSearchResult.title,
+        type = postSearchResult.type.name, // Convert enum to String
+        uid = "Placeholder UID" // Placeholder
+    )
+}
+
 @Composable
 fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSearchResult>, onSearch: (String, Float, String ) -> Unit, onPostClicked: (String) -> Unit, setLocation: (String) -> Unit) { // custom post object that includes distance
     // String for searchQuery, Float for maxDistance, String for all/request/offer
@@ -145,9 +159,10 @@ fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSear
     )
     // phone + post selected
     if (useOnePane && selectedPost != null) {
+        val post = convertToPost(selectedPost!!)
         // Render PostViewingScreen when a post is selected
         PostViewingScreen(
-            post = dummyPost,
+            post = post,
             isEditable = false,
             onClose = { selectedPost = null },
             onEditToggle = { /* Handle edit toggle logic here */ }
@@ -484,8 +499,9 @@ fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSear
                         onEditToggle = { /* Handle edit toggle logic here */ }
                 )}
                 else {
+                    val post = convertToPost(selectedPost!!)
                     PostViewingScreen(
-                        post = dummyPost,
+                        post = post,
                         isEditable = false,
                         onClose = { selectedPost = null },
                         onEditToggle = { /* Handle edit toggle logic here */ }
