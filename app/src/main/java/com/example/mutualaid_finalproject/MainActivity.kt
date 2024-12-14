@@ -78,9 +78,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import android.content.Context
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-
+import android.Manifest
 
 
 
@@ -91,6 +92,18 @@ import com.google.android.gms.location.LocationServices
 
 class MainActivity : ComponentActivity() {
 
+
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+    }
+
+    private var permissionGranted = false
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            permissionGranted = isGranted
+        }
 
     val credentialManager = CredentialManager.create(this)
     val coroutineScope = lifecycleScope
@@ -103,20 +116,38 @@ class MainActivity : ComponentActivity() {
         // Initialize FusedLocationProviderClient
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // Check and request notification permission
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val postNotificationPermission = "android.permission.POST_NOTIFICATIONS"
-            if (ContextCompat.checkSelfPermission(this, postNotificationPermission)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(postNotificationPermission),
-                    100
-                )
-            }
-        }
-        
+//        // Check and request notification permission
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//            val postNotificationPermission = "android.permission.POST_NOTIFICATIONS"
+//            if (ContextCompat.checkSelfPermission(this, postNotificationPermission)
+//                != PackageManager.PERMISSION_GRANTED
+//            ) {
+//                ActivityCompat.requestPermissions(
+//                    this,
+//                    arrayOf(postNotificationPermission),
+//                    100
+//                )
+//            }
+//        }
+
+//       fun requestLocationPermission() {
+//            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+//        }
+//
+//        // Check and request permission
+//        if (ContextCompat.checkSelfPermission(
+//                this,
+//                Manifest.permission.ACCESS_FINE_LOCATION
+//            ) != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            requestLocationPermission()
+//        }
+
+
+
+
+
+
         enableEdgeToEdge(
             statusBarStyle=SystemBarStyle.auto(
                 LogoPurple.toArgb(),
@@ -222,10 +253,10 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
         return
     }
 
-    val expirationTimestamp = Timestamp(1734038949, 0)
-    val message = "Post is about to expire soon!"
-
-    viewModel.scheduleNotification(context, message, expirationTimestamp)
+//    val expirationTimestamp = Timestamp(1734038949, 0)
+//    val message = "Post is about to expire soon!"
+//
+//    viewModel.scheduleNotification(context, message, expirationTimestamp)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -420,6 +451,9 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                 )
                                 viewModel.postRepository.set(newPost, {})
                                 // create the notification with newPost.date_expires
+//                                val expirationTimestamp = Timestamp(1734038949, 0)
+                                val message = "Your post ${newPost.title} is about to expire soon!"
+                                viewModel.scheduleNotification(context, message, newPost.date_expires)
                             }
                         },
                         uid = currentUser?.uid ?: "",
@@ -486,14 +520,22 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                  if (postSearchResult.location == "") {
                                      continue
                                  }
-                                 viewModel.distanceCalculator.getDistanceAsync("BU CDS, Boston, MA", postSearchResult.location, postSearchResult.postId) {distance, pid->
+                                 viewModel.distanceCalculator.getDistanceAsync(originLocation, postSearchResult.location, postSearchResult.postId) {distance, pid->
+//                                     Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+//                                     for (i in 0..postSearchResults.size-1) {
+//                                         if (postSearchResults[i].postId == pid) {
+//                                             postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
                                      Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
-                                     for (i in 0..postSearchResults.size-1) {
-                                         if (postSearchResults[i].postId == pid) {
-                                             postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
+                                    // Sanitize the distance string by removing commas
+                                    val sanitizedDistance = distance?.replace(",", "") ?: "Unknown"
+
+                                    for (i in 0 until postSearchResults.size) {
+                                        if (postSearchResults[i].postId == pid) {
+                                            postSearchResults[i] = postSearchResults[i].copy(distance = sanitizedDistance)
                                          }
                                     }
                                 }
+
                             }
                         }
                     }, onPostClicked = {
