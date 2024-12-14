@@ -97,6 +97,14 @@ data class Distance(val value: Float, val unit: String)
 const val LOCATION_PERMISSION_REQUEST_CODE = 1
 
 fun convertToPost(postSearchResult: PostSearchResult): Post {
+    val type = if (postSearchResult.type == PostType.REQUEST) {
+        "Request"
+    } else if (postSearchResult.type == PostType.OFFER) {
+        "Offer"
+    } else {
+        "Unknown" // Fallback case, if needed
+    }
+
     return Post(
         pid = postSearchResult.postId,
         accepted = postSearchResult.isAccepted,
@@ -105,7 +113,7 @@ fun convertToPost(postSearchResult: PostSearchResult): Post {
         description = "Description for ${postSearchResult.title}", // Placeholder
         location = postSearchResult.location,
         title = postSearchResult.title,
-        type = postSearchResult.type.name, // Convert enum to String
+        type = type,
         uid = "Placeholder UID" // Placeholder
     )
 }

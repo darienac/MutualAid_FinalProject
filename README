@@ -69,3 +69,29 @@ To create a post, tap the "+" widget! You can add details about your request or 
 ### 5) **Settings**
 If you want to log out, simply press the **Logout** button in the settings.
 
+---
+
+## Getting Started
+
+Follow these steps to set up and run the app:
+
+### 1. Install the Android SDK
+Ensure you have the latest Android SDK installed on your machine. You can download it as part of [Android Studio](https://developer.android.com/studio).
+
+### 2. Clone the Repository
+Get the project from version control:
+```bash
+https://github.com/darienac/MutualAid_FinalProject
+```
+
+### 2.5. Open the Project in Android Studio
+- Open Android Studio and select **File > Open**.
+- Navigate to the folder where the repository is cloned and open it.
+
+### 3. Run the Emulator and the App
+- Launch an emulator from Android Studio by selecting **Tools > Device Manager** and choosing a virtual device.
+- Click the green **Run** button (▶) in Android Studio to build and run the app.
+
+MutualAid should now be running on the emulator! :3c
+
+
