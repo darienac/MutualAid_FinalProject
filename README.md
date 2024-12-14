@@ -2,7 +2,7 @@
 > Sarah Malik, Darien Campbell, Olivia Ma
 
 
-##Introduction
+## Introduction
 
 *Strength in Solidarity!* 🌟\
 \
