@@ -1,5 +1,5 @@
 [versions]
-adaptiveVersion = "1.1.0-alpha08"
+adaptive = "1.1.0-alpha08"
 agp = "8.6.0"
 androidxCredentials = "<latest version>"
 coilCompose = "3.0.4"
@@ -31,7 +31,7 @@ workRuntimeKtxVersion = "2.8.1"
 playServicesLocation = "21.3.0"
 
 [libraries]
-androidx-adaptive = { module = "androidx.compose.material3.adaptive:adaptive", version.ref = "adaptiveVersion" }
+androidx-adaptive = { module = "androidx.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-ktx-v1101 = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }

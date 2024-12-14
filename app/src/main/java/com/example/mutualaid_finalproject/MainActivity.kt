@@ -81,6 +81,7 @@ import android.content.Context
 import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import java.text.ParseException
 import android.Manifest
 
 
@@ -430,26 +431,56 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                                       username: String,
                                       title: String,
                                       description: String,
-                                      imageUri: Uri?,
                                       location: String?,
                                       datePosted: String,
                                       dateLatest: String,
                                       tags: String ->
-                            val dateFormat = SimpleDateFormat("yyyy-mm-dd", Locale.US)
+                            val dateFormatPosted = SimpleDateFormat("MM-dd-yyyy HH:mm", Locale.US)
+                            val dateFormatLatest = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+                            var timestampLatest: Timestamp? = null
+                            var timestampPosted: Timestamp? = null
+                            if (title == "") {
+                                Toast.makeText(
+                                    context,
+                                    "No title given",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                return@MyPostsScreen
+                            }
+                            if (type != "Request" && type != "Offer") {
+                                Toast.makeText(
+                                    context,
+                                    "Post must be either 'Request' or 'Offer'",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                return@MyPostsScreen
+                            }
+                            try {
+                                timestampLatest = Timestamp(dateFormatLatest.parse(dateLatest) ?: Date())
+                                timestampPosted = Timestamp(dateFormatPosted.parse(datePosted) ?: Date())
+                            } catch (e: ParseException) {
+                                Toast.makeText(
+                                    context,
+                                    "Invalid date(s) given",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                Log.d("NewPost", "Date Latest: $dateLatest")
+                                Log.d("NewPost", "Date Posted: $datePosted")
+                                return@MyPostsScreen
+                            }
                             if (currentUser != null) {
                                 val newPost = Post(
                                     pid =java.util.UUID.randomUUID().toString(),
                                     accepted =false,
-                                    date_expires =Timestamp(dateFormat.parse(dateLatest) ?: Date()),
-                                    date_posted =Timestamp(dateFormat.parse(datePosted) ?: Date()),
-                                    description =description,
-                                    location =location ?: "",
-                                    title =title,
-                                    type =if (type=="request") "request" else "offer",
-                                    uid =currentUser!!.uid,
-                                    imageUri = null
+                                    date_expires = timestampLatest,
+                                    date_posted = timestampPosted,
+                                    description = description,
+                                    location = location ?: "",
+                                    title = title,
+                                    type = if (type=="Request") "request" else "offer",
+                                    uid = currentUser!!.uid
                                 )
-                                viewModel.postRepository.set(newPost, {})
+                                viewModel.postRepository.set(newPost) {}
                                 // create the notification with newPost.date_expires
 //                                val expirationTimestamp = Timestamp(1734038949, 0)
                                 val message = "Your post ${newPost.title} is about to expire soon!"

@@ -58,7 +58,6 @@ fun MyPostsScreen(
         username: String,
         title: String,
         description: String,
-        imageUri: Uri?,
         location: String?,
         datePosted: String,
         dateLatest: String,
@@ -84,13 +83,36 @@ fun MyPostsScreen(
     }
 
     if (newPostScreenOpen && useOnePane) {
-        InnerScreen(title="New Post", onClose={newPostScreenOpen=false}) {
-            NewPostScreen(modifier, uid) {type,username,title,description,imageUri,location,datePosted,dateLatest,tags->
+        InnerScreen(title="New Post", onClose={newPostScreenOpen=false; postSelected=null}) {
+            NewPostScreen(modifier, uid) {type,username,title,description,location,datePosted,dateLatest,tags->
                 newPostScreenOpen=false
-                onNewPost(type, username, title, description, imageUri, location ,datePosted, dateLatest, tags)
+                onNewPost(type, username, title, description, location ,datePosted, dateLatest, tags)
             }
         }
         return
+    }
+
+    if (postSelected != null && useOnePane) {
+        val post = posts.find {it.pid == postSelected}
+        if (post != null) {
+            PostViewingScreen(
+                post=PostSearchResult(
+                    postId=post.pid,
+                    type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
+                    isAccepted=post.accepted,
+                    title=post.title,
+                    location=post.location,
+                    distance=""
+                ),
+                isEditable=true,
+                onClose={
+                    newPostScreenOpen=false
+                    postSelected=null
+                },
+                onEditToggle={}
+            )
+            return
+        }
     }
 
     Scaffold(
@@ -123,9 +145,29 @@ fun MyPostsScreen(
                 }
                 Box(modifier=Modifier.weight(1f)) {
                     if (newPostScreenOpen) {
-                        NewPostScreen(modifier, uid) {type,username,title,description,imageUri,location,datePosted,dateLatest,tags->
+                        NewPostScreen(modifier, uid) {type,username,title,description,location,datePosted,dateLatest,tags->
                             newPostScreenOpen=false
-                            onNewPost(type, username, title, description, imageUri, location ,datePosted, dateLatest, tags)
+                            onNewPost(type, username, title, description, location ,datePosted, dateLatest, tags)
+                        }
+                    } else if (postSelected != null) {
+                        val post = posts.find {it.pid == postSelected}
+                        if (post != null) {
+                            PostViewingScreen(
+                                post=PostSearchResult(
+                                    postId=post.pid,
+                                    type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
+                                    isAccepted=post.accepted,
+                                    title=post.title,
+                                    location=post.location,
+                                    distance=""
+                                ),
+                                isEditable=true,
+                                onClose={
+                                    newPostScreenOpen=false
+                                    postSelected=null
+                                },
+                                onEditToggle={}
+                            )
                         }
                     } else {
                         Text("No post selected", modifier=Modifier.padding(16.dp).fillMaxWidth(), textAlign=TextAlign.Center)
@@ -185,6 +227,6 @@ fun MyPostsScreen_PostItemWithRemove(post: Post, onPostClicked: (String)->Unit, 
 @Composable
 fun MyPostsPreview() {
     Box(modifier=Modifier.fillMaxSize()) {
-        MyPostsScreen(modifier=Modifier, "", emptyList(), {_,_,_,_,_,_,_,_,_->}, {})
+        MyPostsScreen(modifier=Modifier, "", emptyList(), {_,_,_,_,_,_,_,_->}, {})
     }
 }

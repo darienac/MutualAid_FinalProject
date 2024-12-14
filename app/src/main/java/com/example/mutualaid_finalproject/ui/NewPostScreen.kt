@@ -47,7 +47,6 @@ fun NewPostScreen(
         username: String,
         title: String,
         description: String,
-        imageUri: Uri?,
         location: String?,
         datePosted: String,
         dateLatest: String,
@@ -60,7 +59,6 @@ fun NewPostScreen(
     var description by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
     var tags by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
     var expanded by remember { mutableStateOf(false)}
     var selectedDate by remember { mutableStateOf<Long?>(null) }
     var showModal by remember { mutableStateOf(false) }
@@ -91,11 +89,11 @@ fun NewPostScreen(
 
 
     // Image Picker Launcher
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        imageUri = uri
-    }
+//    val imagePickerLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.GetContent()
+//    ) { uri ->
+//        imageUri = uri
+//    }
 
     Column(
         horizontalAlignment = Alignment.Start,
@@ -177,26 +175,26 @@ fun NewPostScreen(
         )
 
         // Image Upload Section
-        Text(text = "Upload Image", style = MaterialTheme.typography.titleMedium)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            if (imageUri == null) {
-                TextButton(onClick = { imagePickerLauncher.launch("image/*") }) {
-                    Text("Select Image")
-                }
-            } else {
-                Image(
-                    painter = rememberAsyncImagePainter(imageUri),
-                    contentDescription = "Selected Image",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
+//        Text(text = "Upload Image", style = MaterialTheme.typography.titleMedium)
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(150.dp),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            if (imageUri == null) {
+//                TextButton(onClick = { imagePickerLauncher.launch("image/*") }) {
+//                    Text("Select Image")
+//                }
+//            } else {
+//                Image(
+//                    painter = rememberAsyncImagePainter(imageUri),
+//                    contentDescription = "Selected Image",
+//                    contentScale = ContentScale.Crop,
+//                    modifier = Modifier.fillMaxSize()
+//                )
+//            }
+//        }
 
         OutlinedTextField(
             value = location,
@@ -247,13 +245,14 @@ fun NewPostScreen(
 
                 val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm")
                 val current = LocalDateTime.now().format(formatter)
-                val latest = convertMillisToDate(selectedDate!!).format(formatter)
+                val latest = if (selectedDate!=null)
+                    convertMillisToDate(selectedDate!!).format(formatter)
+                    else current // error message snackbar
                 postFunction(
                     type,
                     username,
                     title,
                     description,
-                    imageUri,
                     if (location.isNotBlank()) location else null,
                     current,
                     latest,
@@ -265,10 +264,9 @@ fun NewPostScreen(
                 location = ""
                 selectedDate = null
                 tags = ""
-                imageUri = null
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = title.isNotBlank() && type.isNotBlank() && description.isNotBlank()
+            enabled = title.isNotBlank() && type.isNotBlank() && description.isNotBlank() && selectedDate != null
         ) {
             Text(text = "Create Post")
         }
@@ -276,7 +274,7 @@ fun NewPostScreen(
 }
 
 fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.US)
     return formatter.format(Date(millis))
 }
 
@@ -313,8 +311,8 @@ fun DatePickerModal(
 fun NewPostScreenPreview() {
     NewPostScreen(
         username="coolguy",
-        postFunction = { type, username, title, description, imageUri, location, datePosted, dateLatest, tags ->
-            println("Post created with:\nType: $type\nUsername: $username\nTitle: $title\nDescription: $description\nImage URI: $imageUri\nLocation: $location\nDate Posted: $datePosted\nDate Latest: $dateLatest\nTags: $tags")
+        postFunction = { type, username, title, description, location, datePosted, dateLatest, tags ->
+            println("Post created with:\nType: $type\nUsername: $username\nTitle: $title\nDescription: $description\nLocation: $location\nDate Posted: $datePosted\nDate Latest: $dateLatest\nTags: $tags")
         }
     )
 }
