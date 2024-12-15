@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.androidx.adaptive)
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.ui.test.junit4.android)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -92,11 +93,17 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.work.runtime.ktx)
-    implementation (libs.androidx.core.ktx.v1101)
+    implementation(libs.androidx.core.ktx.v1101)
 //    implementation(libs.firebase.bom.v3370)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
-
-
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.googleid)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.espresso.intents)
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.test.manifest)
+    testImplementation(libs.mockk)
 
 }
