@@ -5,6 +5,7 @@ import com.example.mutualaid_finalproject.model.Profile
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.CoroutineScope
@@ -69,6 +70,12 @@ class RemoteProfilesDao(private val uid: String) {
         collection.document(uid).get()
             .addOnSuccessListener(onResult)
             .addOnFailureListener(onError)
+    }
+
+    fun getList(uids: List<String>, onResult:(DocumentSnapshot?)->Unit, onError:(Exception)->Unit={Log.w(TAG, "Failed getList()")}) {
+        for (uid in uids) {
+            get(uid, onResult=onResult, onError=onError)
+        }
     }
 
     fun set(profile: Profile, onResult:()->Unit, onError:(Exception)->Unit={Log.w(TAG, "Failed set()")}) {

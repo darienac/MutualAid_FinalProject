@@ -83,7 +83,8 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import java.text.ParseException
 import android.Manifest
-
+import androidx.compose.runtime.mutableStateMapOf
+import com.example.mutualaid_finalproject.model.Profile
 
 
 //private const val CHANNEL_ID = "post_acceptance_channel"
@@ -233,7 +234,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
     var postSearchResults = remember {mutableStateListOf<PostSearchResult>()}
     val currentUser by viewModel.currentUser.observeAsState()
     val currentProfile by viewModel.profileRepository.currentProfile.collectAsState(null)
-    
+    val profilesCache = remember {mutableStateMapOf<String, Profile>()}
     // Get a Context for notifications
     val context = LocalContext.current
 
@@ -371,13 +372,13 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                             currentProfile?.copy(skills=currentProfile?.skills?.plus(skill) ?: listOf(skill))?.let { viewModel.profileRepository.set(it) {} }
                         },
                         removeSkill={ index->
-                            currentProfile?.copy(skills=currentProfile?.skills?.drop(index) ?: listOf())?.let { viewModel.profileRepository.set(it) {} }
+                            currentProfile?.copy(skills=currentProfile?.skills?.filterIndexed {k,_-> k != index} ?: listOf())?.let { viewModel.profileRepository.set(it) {} }
                         },
                         addResource={ resource->
                             currentProfile?.copy(resources=currentProfile?.resources?.plus(resource) ?: listOf(resource))?.let { viewModel.profileRepository.set(it) {} }
                         },
                         removeResource={ index->
-                            currentProfile?.copy(skills=currentProfile?.resources?.drop(index) ?: listOf())?.let { viewModel.profileRepository.set(it) {} }
+                            currentProfile?.copy(skills=currentProfile?.resources?.filterIndexed {k,_-> k != index} ?: listOf())?.let { viewModel.profileRepository.set(it) {} }
                         },
                         changeAvailability={ index, time ->
                             var newAvailability = currentProfile?.daysAvailable?.toMutableList()
@@ -489,6 +490,7 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                         },
                         uid = currentUser?.uid ?: "",
                         posts = currentUserPosts,
+                        onPostEdit={viewModel.postRepository.set(it) {}},
                         onPostRemoved={viewModel.postRepository.delete(it) {}}
                     )
                 }
@@ -523,59 +525,73 @@ fun MainNavigation(viewModel: MainViewModel, onGoogleLogin: () -> Unit, onLogin:
                         }
                     }
                 ) {
-                    SearchScreen(modifier = Modifier, postSearchResults, onSearch = {query, maxDistance, selectedOption ->
-                        viewModel.postRepository.search(query) {posts->
-                            var newPostSearchResults = mutableListOf<PostSearchResult>() // Set all at once to avoid unnecessary recompositions
-                            for (post in posts) {
-                                newPostSearchResults.add(PostSearchResult(
-                                    postId=post.pid,
-                                    type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
-                                    isAccepted=post.accepted,
-                                    title=post.title,
-                                    location=post.location,
-                                    distance="Unknown"
-                                ))
-                            }
-//                            viewModel.distanceCalculator.getDistanceAsync(originLocation, postSearchResult.location, postSearchResult.postId) {distance, pid->
-//                                Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
-//                                // Sanitize the distance string by removing commas
-//                                val sanitizedDistance = distance?.replace(",", "") ?: "Unknown"
-//
-//                                for (i in 0 until postSearchResults.size) {
-//                                    if (postSearchResults[i].postId == pid) {
-//                                        postSearchResults[i] = postSearchResults[i].copy(distance = sanitizedDistance)
-                             postSearchResults.clear()
-                             postSearchResults.addAll(newPostSearchResults)
-                             Log.d("SearchScreen", "updating with posts (${posts.size})")
-                             for (postSearchResult in postSearchResults) {
-                                 if (postSearchResult.location == "") {
-                                     continue
-                                 }
-                                 viewModel.distanceCalculator.getDistanceAsync(originLocation, postSearchResult.location, postSearchResult.postId) {distance, pid->
-//                                     Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
-//                                     for (i in 0..postSearchResults.size-1) {
-//                                         if (postSearchResults[i].postId == pid) {
-//                                             postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
-                                     Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
-                                    // Sanitize the distance string by removing commas
-                                    val sanitizedDistance = distance?.replace(",", "") ?: "Unknown"
-
-                                    for (i in 0 until postSearchResults.size) {
-                                        if (postSearchResults[i].postId == pid) {
-                                            postSearchResults[i] = postSearchResults[i].copy(distance = sanitizedDistance)
-                                         }
+                    SearchScreen(modifier = Modifier, postSearchResults, profilesCache, onSearch = {query, maxDistance, selectedOption ->
+                            viewModel.postRepository.search(query) {posts->
+                                var newPostSearchResults = mutableListOf<PostSearchResult>() // Set all at once to avoid unnecessary recompositions
+                                profilesCache.clear()
+                                var uids = mutableListOf<String>() // uids to query Profiles for
+                                for (post in posts) {
+                                    newPostSearchResults.add(PostSearchResult(
+                                        postId=post.pid,
+                                        date_expires=post.date_expires,
+                                        date_posted=post.date_posted,
+                                        description=post.description,
+                                        type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
+                                        uid=post.uid,
+                                        isAccepted=post.accepted,
+                                        title=post.title,
+                                        location=post.location,
+                                        distance="Unknown"
+                                    ))
+                                    uids.add(post.uid)
+                                }
+                                viewModel.profileRepository.getList(uids) {
+                                    if (it != null) {
+                                        profilesCache[it.uid] = it
                                     }
                                 }
+    //                            viewModel.distanceCalculator.getDistanceAsync(originLocation, postSearchResult.location, postSearchResult.postId) {distance, pid->
+    //                                Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+    //                                // Sanitize the distance string by removing commas
+    //                                val sanitizedDistance = distance?.replace(",", "") ?: "Unknown"
+    //
+    //                                for (i in 0 until postSearchResults.size) {
+    //                                    if (postSearchResults[i].postId == pid) {
+    //                                        postSearchResults[i] = postSearchResults[i].copy(distance = sanitizedDistance)
+                                 postSearchResults.clear()
+                                 postSearchResults.addAll(newPostSearchResults)
+                                 Log.d("SearchScreen", "updating with posts (${posts.size})")
+                                 for (postSearchResult in postSearchResults) {
+                                     if (postSearchResult.location == "") {
+                                         continue
+                                     }
+                                     viewModel.distanceCalculator.getDistanceAsync(originLocation, postSearchResult.location, postSearchResult.postId) {distance, pid->
+    //                                     Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+    //                                     for (i in 0..postSearchResults.size-1) {
+    //                                         if (postSearchResults[i].postId == pid) {
+    //                                             postSearchResults[i] = postSearchResults[i].copy(distance=distance ?: "Unknown")
+                                         Log.d("SearchScreen", "New distance (${postSearchResult.postId}) {${distance}}")
+                                        // Sanitize the distance string by removing commas
+                                        val sanitizedDistance = distance?.replace(",", "") ?: "Unknown"
 
+                                        for (i in 0 until postSearchResults.size) {
+                                            if (postSearchResults[i].postId == pid) {
+                                                postSearchResults[i] = postSearchResults[i].copy(distance = sanitizedDistance)
+                                             }
+                                        }
+                                    }
+
+                                }
                             }
-                        }
-                    }, onPostClicked = {
-                        val expirationTimestamp = Timestamp(1672502400000L, 0)
-                        val message = "Post is about to expire soon!"
-
-                        viewModel.scheduleNotification(context, message, expirationTimestamp) },
-                        setLocation = { location -> setLocation(location)
-                    })
+                        },
+//                        onPostClicked = {
+//                            val expirationTimestamp = Timestamp(1672502400000L, 0)
+//                            val message = "Post is about to expire soon!"
+//
+//                            viewModel.scheduleNotification(context, message, expirationTimestamp)
+//                        },
+                        setLocation = { location -> setLocation(location) }
+                    )
                 }
                 composable(
                     "SettingsNav",

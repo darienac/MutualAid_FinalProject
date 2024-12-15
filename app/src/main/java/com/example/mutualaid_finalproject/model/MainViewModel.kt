@@ -55,7 +55,7 @@ class MainViewModel(application: Application) : ViewModel() {
             postRepository = PostRepository()
             currentUser.value = null
         } else {
-            profileRepository = ProfileRepository(user.uid) {
+            profileRepository = ProfileRepository(UserData(user.uid, user.email?:"", user.isEmailVerified)) {
                 currentUser.value = UserData(
                     uid=user.uid,
                     email=user.email?:"",

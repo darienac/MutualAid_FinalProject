@@ -12,6 +12,5 @@ data class Post(
     val location: String = "",
     val title: String = "",
     val type: String = "",
-    val uid: String = "NO_USER",
-    val imageUri: Uri? = null
+    val uid: String = "NO_USER"
 )

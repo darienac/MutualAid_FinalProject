@@ -49,6 +49,8 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.window.core.layout.WindowWidthSizeClass
+import com.example.mutualaid_finalproject.model.Profile
+import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -80,7 +82,11 @@ import java.util.Locale
 
 data class PostSearchResult(
     val postId: String, // UUID
+    val date_expires: Timestamp = Timestamp(0, 0),
+    val date_posted: Timestamp = Timestamp(0, 0),
+    val description: String = "",
     val type: PostType, // Enum for REQUEST or OFFER
+    val uid: String = "NO_USER",
     val isAccepted: Boolean,
     val title: String,
     val location: String,
@@ -98,9 +104,9 @@ const val LOCATION_PERMISSION_REQUEST_CODE = 1
 
 fun convertToPost(postSearchResult: PostSearchResult): Post {
     val type = if (postSearchResult.type == PostType.REQUEST) {
-        "Request"
+        "request"
     } else if (postSearchResult.type == PostType.OFFER) {
-        "Offer"
+        "offer"
     } else {
         "Unknown" // Fallback case, if needed
     }
@@ -108,18 +114,18 @@ fun convertToPost(postSearchResult: PostSearchResult): Post {
     return Post(
         pid = postSearchResult.postId,
         accepted = postSearchResult.isAccepted,
-        date_expires = com.google.firebase.Timestamp.now(), // Placeholder
-        date_posted = com.google.firebase.Timestamp.now(), // Placeholder
-        description = "Description for ${postSearchResult.title}", // Placeholder
+        date_expires = postSearchResult.date_expires,
+        date_posted = postSearchResult.date_posted,
+        description = postSearchResult.description,
         location = postSearchResult.location,
         title = postSearchResult.title,
         type = type,
-        uid = "Placeholder UID" // Placeholder
+        uid = postSearchResult.uid
     )
 }
 
 @Composable
-fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSearchResult>, onSearch: (String, Float, String ) -> Unit, onPostClicked: (String) -> Unit, setLocation: (String) -> Unit) { // custom post object that includes distance
+fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSearchResult>, profiles: Map<String, Profile>, onSearch: (String, Float, String ) -> Unit, setLocation: (String) -> Unit) { // custom post object that includes distance
     // String for searchQuery, Float for maxDistance, String for all/request/offer
 //    var searchQuery by remember { mutableStateOf("") }
     var maxDistance by remember { mutableStateOf(50f) } // Maximum distance in miles
@@ -154,31 +160,32 @@ fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSear
 
     // State to track the selected post
     var selectedPost by remember { mutableStateOf<PostSearchResult?>(null) }
-    val dummyPost = Post(
-        pid = "12345",
-        accepted = false,
-        date_expires = com.google.firebase.Timestamp.now(), // Current timestamp
-        date_posted = com.google.firebase.Timestamp.now(), // Current timestamp
-        description = "This is a test post description.",
-        location = "This is a test location.",
-        title = "Test Post Title",
-        type = "Request",
-        uid = "Mr. Meowers"
-    )
+//    val dummyPost = Post(
+//        pid = "12345",
+//        accepted = false,
+//        date_expires = com.google.firebase.Timestamp.now(), // Current timestamp
+//        date_posted = com.google.firebase.Timestamp.now(), // Current timestamp
+//        description = "This is a test post description.",
+//        location = "This is a test location.",
+//        title = "Test Post Title",
+//        type = "Request",
+//        uid = "Mr. Meowers"
+//    )
     // phone + post selected
     if (useOnePane && selectedPost != null) {
         val post = convertToPost(selectedPost!!)
         // Render PostViewingScreen when a post is selected
         PostViewingScreen(
             post = post,
+            profile = profiles[post.uid],
             isEditable = false,
             onClose = { selectedPost = null },
-            onEditToggle = { /* Handle edit toggle logic here */ }
+            onPostEdit = {}
         )
     // phone + no post selected
     } else if (useOnePane) {
 
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp)) {
             // Search bar
             LocationInput(maxDistance, selectedOption, onSearch = onSearch)
 
@@ -339,7 +346,7 @@ fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSear
         Row(modifier = Modifier.fillMaxSize()) {
             // Search UI on the left
             Box(modifier = Modifier.weight(1f)) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp)) {
                     // Search bar
                     LocationInput(maxDistance, selectedOption, onSearch = onSearch)
 
@@ -502,219 +509,22 @@ fun SearchScreen(modifier: Modifier = Modifier, postSearchResults: List<PostSear
                 if (selectedPost == null){
                     PostViewingScreen(
                         post = null,
+                        profile = null,
                         isEditable = false,
                         onClose = { selectedPost = null },
-                        onEditToggle = { /* Handle edit toggle logic here */ }
+                        onPostEdit = {}
                 )}
                 else {
                     val post = convertToPost(selectedPost!!)
                     PostViewingScreen(
                         post = post,
+                        profile = profiles[post.uid],
                         isEditable = false,
                         onClose = { selectedPost = null },
-                        onEditToggle = { /* Handle edit toggle logic here */ }
+                        onPostEdit = {}
                     )
                 }
             }
-        }
-    }
-}
-
-
-
-@Composable
-fun PostViewingScreen(
-    modifier: Modifier = Modifier,
-    post: Post?,
-    isEditable: Boolean = false,
-    onClose: () -> Unit,
-    onEditToggle: (Boolean) -> Unit
-) {
-    var isEditing by remember { mutableStateOf(isEditable) }
-    var title by remember { mutableStateOf(post?.title ?: "") }
-    var description by remember { mutableStateOf(post?.description ?: "") }
-    var location by remember { mutableStateOf(post?.location ?: "") }
-    var expirationDate by remember { mutableStateOf(post?.date_expires?.toDate()) }
-    var accepted by remember { mutableStateOf(post?.accepted ?: false) }
-    var selectedType by remember { mutableStateOf(post?.type ?: "") }
-
-
-    val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-
-
-    Column(modifier = Modifier.padding(16.dp)) {
-
-    Text(
-        text = if (isEditing) "Edit Post" else "View Post",
-        style = MaterialTheme.typography.headlineMedium,
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center)
-        if (post == null){
-            Text("No post selected", modifier=Modifier.padding(16.dp).fillMaxWidth(), textAlign=TextAlign.Center)
-        }
-        else{
-        // Close button
-
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                "Close",
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .clickable { onClose() },
-
-            )
-        }
-    LazyColumn(
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = modifier
-            .fillMaxSize()
-//            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        // Title
-
-
-
-//        // Close Button
-//        item {
-//            Box(modifier = Modifier.fillMaxWidth()) {
-//                TextButton(
-//                    onClick = onClose,
-//
-//                ) {
-//                    Text("Close")
-//                }
-//            }
-//        }
-
-        // Title Field
-
-        item{if (isEditing) {
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        } else {
-            SectionHeader("Title")
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-        }}
-
-        // Description Field
-        item{if (isEditing) {
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        } else {
-            SectionHeader("Description")
-            Text(text = description, style = MaterialTheme.typography.bodyLarge)
-        }}
-
-        // Location Field
-        item{if (isEditing) {
-            OutlinedTextField(
-                value = location,
-                onValueChange = { location = it },
-                label = { Text("Location") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        } else {
-            SectionHeader("Location")
-            Text(text = location, style = MaterialTheme.typography.bodyLarge)
-        }}
-
-        // Post Type
-
-        item{
-        SectionHeader("Type")
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            RadioButton(
-                selected = selectedType == "Request",
-                onClick = { if (isEditing) selectedType = "Request" },
-                enabled = isEditing
-            )
-            Text(text = "Request", modifier = Modifier.padding(end = 16.dp))
-
-            RadioButton(
-                selected = selectedType == "Offer",
-                onClick = { if (isEditing) selectedType = "Offer" },
-                enabled = isEditing
-            )
-            Text(text = "Offer")
-        }}
-
-        // Date Posted
-        item {
-            SectionHeader("Date Posted")
-            Text(
-                text = dateFormatter.format(post.date_posted.toDate()),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-        // Expiration Date
-        item {
-            SectionHeader("Expiration Date")
-            Text(
-                text = dateFormatter.format(expirationDate),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-
-        // Accepted Field
-        item{if (isEditing) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "Accepted: ", style = MaterialTheme.typography.bodyLarge)
-                Switch(
-                    checked = accepted,
-                    onCheckedChange = { accepted = it }
-                )
-            }
-        } else {
-            SectionHeader("Accepted")
-            Text(
-                text = if (accepted) "Yes" else "No",
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }}
-
-        // UID clickable Card (only in viewing mode)
-        item {
-            if (!isEditing) {
-                SectionHeader("Profile")
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            // Pass the UID to the click handler
-                        }
-                        .padding(8.dp)
-                ) {
-                    Text(
-                        text = post.uid,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-        }
-
-        // Edit Toggle Button
-        item{TextButton(
-            onClick = {
-                isEditing = !isEditing
-                onEditToggle(isEditing)
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(if (isEditing) "Switch to View Mode" else "Switch to Edit Mode")
-        }}
-    }
         }
     }
 }
