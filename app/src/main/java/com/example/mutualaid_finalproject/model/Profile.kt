@@ -8,6 +8,7 @@ data class ProfileTimeAvailability(
 
 data class Profile(
     val uid: String="",
+    val email: String="",
     val phoneNumber: String="",
     val name: String="",
     val description: String="",

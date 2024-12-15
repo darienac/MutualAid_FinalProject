@@ -53,14 +53,14 @@ fun ProfileScreen(
     skills: List<String>,
     resources: List<String>,
     availability: List<ProfileTimeAvailability>,
-    onPhoneNumberChange: (String) -> Unit,
-    onNameChange: (String) -> Unit,
-    onDescriptionChange: (String) -> Unit,
-    addSkill: (String) -> Unit,
-    removeSkill: (Int) -> Unit,
-    addResource: (String) -> Unit,
-    removeResource: (Int) -> Unit,
-    changeAvailability: (Int, String) -> Unit
+    onPhoneNumberChange: (String) -> Unit={},
+    onNameChange: (String) -> Unit={},
+    onDescriptionChange: (String) -> Unit={},
+    addSkill: (String) -> Unit={},
+    removeSkill: (Int) -> Unit={},
+    addResource: (String) -> Unit={},
+    removeResource: (Int) -> Unit={},
+    changeAvailability: (Int, String) -> Unit={_,_->}
 ) {
     var editPhoneNumber by remember { mutableStateOf(false) }
     var newPhoneNumber by remember { mutableStateOf(phoneNumber) }

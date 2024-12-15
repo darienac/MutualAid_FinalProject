@@ -63,6 +63,7 @@ fun MyPostsScreen(
         dateLatest: String,
         tags: String
     ) -> Unit,
+    onPostEdit: (Post)->Unit,
     onPostRemoved: (String)->Unit
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -96,20 +97,14 @@ fun MyPostsScreen(
         val post = posts.find {it.pid == postSelected}
         if (post != null) {
             PostViewingScreen(
-                post=PostSearchResult(
-                    postId=post.pid,
-                    type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
-                    isAccepted=post.accepted,
-                    title=post.title,
-                    location=post.location,
-                    distance=""
-                ),
+                post=post,
+                profile=null,
                 isEditable=true,
                 onClose={
                     newPostScreenOpen=false
                     postSelected=null
                 },
-                onEditToggle={}
+                onPostEdit=onPostEdit
             )
             return
         }
@@ -139,7 +134,6 @@ fun MyPostsScreen(
                         postSelected = it
                         newPostScreenOpen = false
                     }, onPostRemoved = {
-                        postSelected = null
                         removePostConfirmation = it
                     })
                 }
@@ -153,20 +147,14 @@ fun MyPostsScreen(
                         val post = posts.find {it.pid == postSelected}
                         if (post != null) {
                             PostViewingScreen(
-                                post=PostSearchResult(
-                                    postId=post.pid,
-                                    type=if (post.type == "request") PostType.REQUEST else PostType.OFFER,
-                                    isAccepted=post.accepted,
-                                    title=post.title,
-                                    location=post.location,
-                                    distance=""
-                                ),
+                                post=post,
+                                profile=null,
                                 isEditable=true,
                                 onClose={
                                     newPostScreenOpen=false
                                     postSelected=null
                                 },
-                                onEditToggle={}
+                                onPostEdit=onPostEdit
                             )
                         }
                     } else {
@@ -227,6 +215,6 @@ fun MyPostsScreen_PostItemWithRemove(post: Post, onPostClicked: (String)->Unit, 
 @Composable
 fun MyPostsPreview() {
     Box(modifier=Modifier.fillMaxSize()) {
-        MyPostsScreen(modifier=Modifier, "", emptyList(), {_,_,_,_,_,_,_,_->}, {})
+        MyPostsScreen(modifier=Modifier, "", emptyList(), {_,_,_,_,_,_,_,_->}, {}, {})
     }
 }
