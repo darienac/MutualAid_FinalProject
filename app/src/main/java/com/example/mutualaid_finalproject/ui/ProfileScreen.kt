@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,14 +54,14 @@ fun ProfileScreen(
     skills: List<String>,
     resources: List<String>,
     availability: List<ProfileTimeAvailability>,
-    onPhoneNumberChange: (String) -> Unit,
-    onNameChange: (String) -> Unit,
-    onDescriptionChange: (String) -> Unit,
-    addSkill: (String) -> Unit,
-    removeSkill: (Int) -> Unit,
-    addResource: (String) -> Unit,
-    removeResource: (Int) -> Unit,
-    changeAvailability: (Int, String) -> Unit
+    onPhoneNumberChange: (String) -> Unit={},
+    onNameChange: (String) -> Unit={},
+    onDescriptionChange: (String) -> Unit={},
+    addSkill: (String) -> Unit={},
+    removeSkill: (Int) -> Unit={},
+    addResource: (String) -> Unit={},
+    removeResource: (Int) -> Unit={},
+    changeAvailability: (Int, String) -> Unit={_,_->}
 ) {
     var editPhoneNumber by remember { mutableStateOf(false) }
     var newPhoneNumber by remember { mutableStateOf(phoneNumber) }
@@ -78,7 +79,8 @@ fun ProfileScreen(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(16.dp)
+            .testTag("profile_screen"),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         // Profile Header
@@ -97,7 +99,7 @@ fun ProfileScreen(
                     value = newName,
                     onValueChange = { newName = it },
                     label = { Text("Edit Name") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).testTag("name_input")
                 )
                 TextButton(onClick = {
                     onNameChange(newName)
@@ -110,7 +112,7 @@ fun ProfileScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = name, modifier = Modifier.weight(1f))
                 if (allowEdits) {
-                    TextButton(onClick = { editName = true }) {
+                    TextButton(onClick = { editName = true }, modifier=Modifier.testTag("name_enable_input")) {
                         Text("Edit")
                     }
                 }
@@ -152,7 +154,7 @@ fun ProfileScreen(
         Text(
             text = "Email: $email",
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().testTag("email_input")
         )
 
         Row(verticalAlignment=Alignment.CenterVertically) {
