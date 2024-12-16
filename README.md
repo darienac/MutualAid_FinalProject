@@ -39,7 +39,7 @@ For improved accessibility and comfort, **MutualAid** provides an alternative da
 ## Usage Instructions
 
 ### 1) **Login/Signup**
-To get started, sign up for an account using your email and password, or log in if you already have an account. Alternatively, you can log in with your Google account for convenience.
+To get started, sign up for an account using your email and password, or log in if you already have an account. Alternatively, you can log in with your Google account for convenience. To log in with Google, your Google account need to be signed in on the Android device first.
 
 ### 2) **Profile**
 Once logged in, you can customize your profile. Add your:
