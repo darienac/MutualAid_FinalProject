@@ -22,6 +22,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.delay
 
 import java.util.Date
 import java.text.SimpleDateFormat
@@ -186,8 +187,9 @@ class MainViewModel(application: Application) : ViewModel() {
 //    }
     fun scheduleNotification(context: Context, message: String, expirationTimestamp: Timestamp) {
         val currentTimeMillis = System.currentTimeMillis()
-        val expirationTimeMillis = expirationTimestamp.toDate().time // Convert Timestamp to milliseconds
-        val delayMillis = expirationTimeMillis - currentTimeMillis
+        var expirationTimeMillis = expirationTimestamp.toDate().time // Convert Timestamp to milliseconds
+        // Calculate delay, adjusting for next-day transitions if necessary
+        var delayMillis = expirationTimeMillis - currentTimeMillis
 
         if (delayMillis > 0) { // Only schedule if the expiration time is in the future
             val data = Data.Builder()
@@ -204,12 +206,21 @@ class MainViewModel(application: Application) : ViewModel() {
             val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val formattedTime = dateFormat.format(notificationTime)
 
-            // Log the time for debugging
-            Log.d("NotificationScheduler", "Notification scheduled to pop up at: $formattedTime")
+            // Calculate the exact time the notification will pop up
+            val currentTime =  Date(delayMillis)
+            val formattedCurrTime = dateFormat.format(currentTime)
 
+            // Log the time for debugging
+            Log.d("NotificationDebugger", "delayMillis: $delayMillis")
+            Log.d("NotificationScheduler", "Notification scheduled to pop up at: $formattedTime")
             WorkManager.getInstance(context).enqueue(notificationWork)
         }
         else {
+            // Calculate the exact time the notification will pop up
+            val currentTime =  Date(currentTimeMillis)
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val formattedCurrTime = dateFormat.format(currentTime)
+            Log.d("NotificationDebugger", "It is $formattedCurrTime; time between now and post expiration is: $delayMillis milliseconds.")
             Log.d("NotificationScheduler", "Expiration time has already passed. No notification scheduled.")
         }
 }

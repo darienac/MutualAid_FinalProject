@@ -227,7 +227,8 @@ fun NewPostScreen(
 
         if (showModal) {
             DatePickerModal(
-                onDateSelected = { selectedDate = it },
+                onDateSelected = { date ->
+                    selectedDate = (date?.plus(86400000) ?: System.currentTimeMillis() + 86400000)},
                 onDismiss = { showModal = false }
             )
         }
